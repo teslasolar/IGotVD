@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroNet Workspace - Neural Desktop v4.1</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(circle at center, #1a0033, #0d001a, #000000);
+            color: #e0b3ff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .desktop-layer {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .neuron-panel {
+            position: absolute;
+            background: rgba(26, 0, 51, 0.95);
+            border: 2px solid #b366ff;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(179, 102, 255, 0.4);
+            display: none;
+        }
+
+        .neuron-panel.active {
+            display: block;
+            animation: neuralPulse 0.5s ease-out;
+        }
+
+        @keyframes neuralPulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #b366ff, #8000ff);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 18px 18px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: calc(100% - 60px);
+            overflow-y: auto;
+        }
+
+        .neural-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #b366ff, #6600cc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(179, 102, 255, 0.6);
+            font-size: 28px;
+        }
+
+        .neural-node:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 40px rgba(179, 102, 255, 1);
+        }
+
+        .neural-node::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #b366ff;
+            animation: sonar 2s infinite;
+        }
+
+        @keyframes sonar {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        #neural-dock {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 0, 51, 0.95);
+            border: 2px solid #b366ff;
+            border-radius: 30px;
+            padding: 15px 25px;
+            display: flex;
+            gap: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(179, 102, 255, 0.6);
+            z-index: 1000;
+        }
+
+        .dock-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #b366ff, #8000ff);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .dock-icon:hover {
+            transform: translateY(-10px) scale(1.1);
+            box-shadow: 0 10px 30px rgba(179, 102, 255, 0.8);
+        }
+
+        .dock-label {
+            position: absolute;
+            bottom: -25px;
+            background: rgba(179, 102, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            white-space: nowrap;
+            display: none;
+        }
+
+        .dock-icon:hover .dock-label {
+            display: block;
+        }
+
+        .neural-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .neural-card {
+            background: rgba(179, 102, 255, 0.1);
+            border: 2px solid #b366ff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .neural-card:hover {
+            background: rgba(179, 102, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(179, 102, 255, 0.5);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .synaptic-terminal {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #b366ff;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e0b3ff;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            line-height: 1.6;
+        }
+
+        .terminal-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .terminal-prompt {
+            color: #ff66cc;
+            font-weight: bold;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: rgba(179, 102, 255, 0.2);
+            border: 1px solid #b366ff;
+            border-radius: 5px;
+            padding: 8px 12px;
+            color: #e0b3ff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .neural-visualizer {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #b366ff;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layer-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .nn-layer {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nn-neuron {
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #ff66cc, #cc0099);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff66cc;
+            animation: neuronPulse 2s infinite alternate;
+        }
+
+        @keyframes neuronPulse {
+            0% { box-shadow: 0 0 10px #ff66cc; }
+            100% { box-shadow: 0 0 25px #ff66cc; }
+        }
+
+        .training-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .neural-btn {
+            background: linear-gradient(135deg, #b366ff, #8000ff);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(179, 102, 255, 0.4);
+        }
+
+        .neural-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(179, 102, 255, 0.6);
+        }
+
+        .neural-btn:active {
+            transform: translateY(0);
+        }
+
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(179, 102, 255, 0.15);
+            border: 2px solid #b366ff;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #cc99ff;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #b366ff;
+            text-shadow: 0 0 10px #b366ff;
+        }
+
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+            margin: 10px auto;
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .dataset-viewer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+
+        .data-sample {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #b366ff, #8000ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .data-sample:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px #b366ff;
+        }
+
+        .notification-center {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 2000;
+        }
+
+        .notification {
+            background: rgba(26, 0, 51, 0.95);
+            border: 2px solid #b366ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 25px rgba(179, 102, 255, 0.5);
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            color: #b366ff;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: #e0b3ff;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #b366ff, transparent);
+            transform-origin: left center;
+            pointer-events: none;
+            animation: dataFlow 2s infinite;
+        }
+
+        @keyframes dataFlow {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .model-architecture {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #b366ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .layer-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(179, 102, 255, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #b366ff;
+        }
+
+        .search-bar {
+            width: 100%;
+            background: rgba(179, 102, 255, 0.1);
+            border: 2px solid #b366ff;
+            border-radius: 25px;
+            padding: 12px 20px;
+            color: #e0b3ff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(179, 102, 255, 0.5);
+        }
+
+        .widget-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .widget {
+            background: rgba(179, 102, 255, 0.1);
+            border: 2px solid #b366ff;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .widget-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #b366ff;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(179, 102, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #b366ff;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8000ff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="neural-canvas"></canvas>
+
+    <div class="desktop-layer">
+        <!-- Neural Nodes (Desktop Icons) -->
+        <div class="neural-node" style="top: 80px; left: 80px;" ondblclick="openPanel('dashboard')" title="Neural Dashboard">
+            🧠
+        </div>
+        <div class="neural-node" style="top: 80px; left: 180px;" ondblclick="openPanel('training')" title="Model Training">
+            🎯
+        </div>
+        <div class="neural-node" style="top: 80px; left: 280px;" ondblclick="openPanel('datasets')" title="Datasets">
+            📊
+        </div>
+        <div class="neural-node" style="top: 200px; left: 80px;" ondblclick="openPanel('terminal')" title="Neural Terminal">
+            💻
+        </div>
+        <div class="neural-node" style="top: 200px; left: 180px;" ondblclick="openPanel('visualizer')" title="Network Visualizer">
+            🔮
+        </div>
+        <div class="neural-node" style="top: 200px; left: 280px;" ondblclick="openPanel('models')" title="Model Library">
+            📚
+        </div>
+
+        <!-- Neural Dashboard Panel -->
+        <div id="dashboard" class="neuron-panel" style="left: 400px; top: 80px; width: 800px; height: 600px;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>🧠</span>
+                    <span>Neural Dashboard</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="control-btn" style="background: #ffaa00;" onclick="minimizePanel('dashboard')">−</button>
+                    <button class="control-btn" style="background: #00ff00;" onclick="maximizePanel('dashboard')">□</button>
+                    <button class="control-btn" style="background: #ff4444;" onclick="closePanel('dashboard')">×</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <input type="text" class="search-bar" placeholder="Search models, datasets, experiments...">
+
+                <div class="stats-dashboard">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Models</div>
+                        <div class="stat-value" id="activeModels">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Training Jobs</div>
+                        <div class="stat-value" id="trainingJobs">3</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">GPU Usage</div>
+                        <div class="stat-value" id="gpuUsage">78%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracy">94.7%</div>
+                    </div>
+                </div>
+
+                <div class="widget-container" style="margin-top: 30px;">
+                    <div class="widget">
+                        <div class="widget-title">Recent Models</div>
+                        <div style="line-height: 2;">
+                            <div>🤖 Image Classifier v3.2</div>
+                            <div>🗣️ Speech Recognition v2.1</div>
+                            <div>📝 Text Generator v4.0</div>
+                            <div>🎨 Style Transfer v1.8</div>
+                        </div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-title">Training Progress</div>
+                        <div style="line-height: 2;">
+                            <div>ResNet-50: Epoch 23/50 (46%)</div>
+                            <div>LSTM-GEN: Epoch 87/100 (87%)</div>
+                            <div>GAN-Artist: Epoch 12/30 (40%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Training Panel -->
+        <div id="training" class="neuron-panel" style="left: 350px; top: 100px; width: 750px; height: 650px;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>🎯</span>
+                    <span>Model Training Center</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="control-btn" style="background: #ffaa00;" onclick="minimizePanel('training')">−</button>
+                    <button class="control-btn" style="background: #00ff00;" onclick="maximizePanel('training')">□</button>
+                    <button class="control-btn" style="background: #ff4444;" onclick="closePanel('training')">×</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <h3 style="margin-bottom: 15px;">Neural Network Architecture</h3>
+                <div class="neural-visualizer">
+                    <div class="layer-container" id="nnVisualizer">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+
+                <div class="model-architecture">
+                    <div class="layer-info">
+                        <span>Input Layer</span>
+                        <span>784 neurons</span>
+                    </div>
+                    <div class="layer-info">
+                        <span>Hidden Layer 1</span>
+                        <span>256 neurons (ReLU)</span>
+                    </div>
+                    <div class="layer-info">
+                        <span>Hidden Layer 2</span>
+                        <span>128 neurons (ReLU)</span>
+                    </div>
+                    <div class="layer-info">
+                        <span>Output Layer</span>
+                        <span>10 neurons (Softmax)</span>
+                    </div>
+                </div>
+
+                <div class="training-controls">
+                    <button class="neural-btn" onclick="startTraining()">▶️ Start Training</button>
+                    <button class="neural-btn" onclick="pauseTraining()">⏸️ Pause</button>
+                    <button class="neural-btn" onclick="stopTraining()">⏹️ Stop</button>
+                    <button class="neural-btn" onclick="saveModel()">💾 Save Model</button>
+                    <button class="neural-btn" onclick="exportModel()">📤 Export</button>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h4>Training Metrics</h4>
+                    <div class="stats-dashboard" style="margin-top: 10px;">
+                        <div class="stat-card">
+                            <div class="stat-label">Loss</div>
+                            <div class="stat-value" id="lossValue">0.0234</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value" id="accValue">96.8%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Epoch</div>
+                            <div class="stat-value" id="epochValue">45/100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datasets Panel -->
+        <div id="datasets" class="neuron-panel" style="left: 450px; top: 90px; width: 700px; height: 550px;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>📊</span>
+                    <span>Dataset Manager</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="control-btn" style="background: #ffaa00;" onclick="minimizePanel('datasets')">−</button>
+                    <button class="control-btn" style="background: #00ff00;" onclick="maximizePanel('datasets')">□</button>
+                    <button class="control-btn" style="background: #ff4444;" onclick="closePanel('datasets')">×</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="neural-grid">
+                    <div class="neural-card" onclick="loadDataset('mnist')">
+                        <div class="card-icon">🔢</div>
+                        <div>MNIST</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">60k samples</div>
+                    </div>
+                    <div class="neural-card" onclick="loadDataset('cifar')">
+                        <div class="card-icon">🖼️</div>
+                        <div>CIFAR-10</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">50k samples</div>
+                    </div>
+                    <div class="neural-card" onclick="loadDataset('imagenet')">
+                        <div class="card-icon">📸</div>
+                        <div>ImageNet</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">1.2M samples</div>
+                    </div>
+                    <div class="neural-card" onclick="loadDataset('text')">
+                        <div class="card-icon">📝</div>
+                        <div>Text Corpus</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">2.4GB</div>
+                    </div>
+                    <div class="neural-card" onclick="loadDataset('audio')">
+                        <div class="card-icon">🎵</div>
+                        <div>Audio DB</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">15k files</div>
+                    </div>
+                    <div class="neural-card" onclick="loadDataset('custom')">
+                        <div class="card-icon">➕</div>
+                        <div>Custom</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Upload new</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h4>Dataset Preview</h4>
+                    <div class="dataset-viewer" id="datasetPreview">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Neural Terminal Panel -->
+        <div id="terminal" class="neuron-panel" style="left: 500px; top: 120px; width: 700px; height: 550px;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>💻</span>
+                    <span>Neural Terminal</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="control-btn" style="background: #ffaa00;" onclick="minimizePanel('terminal')">−</button>
+                    <button class="control-btn" style="background: #00ff00;" onclick="maximizePanel('terminal')">□</button>
+                    <button class="control-btn" style="background: #ff4444;" onclick="closePanel('terminal')">×</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="synaptic-terminal" id="terminalOutput">
+                    <div class="terminal-line">NeuroNet Terminal v4.1 - Ready</div>
+                    <div class="terminal-line">Type 'help' for available commands</div>
+                    <div class="terminal-line"></div>
+                    <div class="terminal-line">neuro@workspace:~$</div>
+                </div>
+                <div class="terminal-input-wrapper">
+                    <span class="terminal-prompt">neuro@workspace:~$</span>
+                    <input type="text" class="terminal-input" id="terminalInput" onkeypress="handleTerminal(event)" placeholder="Enter command...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Visualizer Panel -->
+        <div id="visualizer" class="neuron-panel" style="left: 380px; top: 70px; width: 850px; height: 650px;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>🔮</span>
+                    <span>Network Visualizer</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="control-btn" style="background: #ffaa00;" onclick="minimizePanel('visualizer')">−</button>
+                    <button class="control-btn" style="background: #00ff00;" onclick="maximizePanel('visualizer')">□</button>
+                    <button class="control-btn" style="background: #ff4444;" onclick="closePanel('visualizer')">×</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <canvas id="networkCanvas" width="800" height="500" style="border: 2px solid #b366ff; border-radius: 10px; background: rgba(0,0,0,0.5);"></canvas>
+                <div class="training-controls">
+                    <button class="neural-btn" onclick="randomizeNetwork()">🎲 Randomize</button>
+                    <button class="neural-btn" onclick="animateForward()">➡️ Forward Pass</button>
+                    <button class="neural-btn" onclick="animateBackward()">⬅️ Backward Pass</button>
+                    <button class="neural-btn" onclick="clearCanvas()">🗑️ Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Library Panel -->
+        <div id="models" class="neuron-panel" style="left: 420px; top: 110px; width: 750px; height: 600px;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>📚</span>
+                    <span>Model Library</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="control-btn" style="background: #ffaa00;" onclick="minimizePanel('models')">−</button>
+                    <button class="control-btn" style="background: #00ff00;" onclick="maximizePanel('models')">□</button>
+                    <button class="control-btn" style="background: #ff4444;" onclick="closePanel('models')">×</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <input type="text" class="search-bar" placeholder="Search models...">
+
+                <div class="neural-grid">
+                    <div class="neural-card">
+                        <div class="card-icon">🤖</div>
+                        <div>ResNet-50</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Image Classification</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">🧠</div>
+                        <div>BERT</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">NLP</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">🎨</div>
+                        <div>StyleGAN</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Image Generation</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">🔊</div>
+                        <div>WaveNet</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Audio Synthesis</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">🎯</div>
+                        <div>YOLO v8</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Object Detection</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">🗣️</div>
+                        <div>Whisper</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Speech-to-Text</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">📝</div>
+                        <div>GPT-4</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Text Generation</div>
+                    </div>
+                    <div class="neural-card">
+                        <div class="card-icon">🎭</div>
+                        <div>DALL-E</div>
+                        <div style="font-size: 11px; margin-top: 5px; color: #cc99ff;">Text-to-Image</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Neural Dock -->
+    <div id="neural-dock">
+        <div class="dock-icon" onclick="openPanel('dashboard')">
+            🧠
+            <div class="dock-label">Dashboard</div>
+        </div>
+        <div class="dock-icon" onclick="openPanel('training')">
+            🎯
+            <div class="dock-label">Training</div>
+        </div>
+        <div class="dock-icon" onclick="openPanel('datasets')">
+            📊
+            <div class="dock-label">Datasets</div>
+        </div>
+        <div class="dock-icon" onclick="openPanel('terminal')">
+            💻
+            <div class="dock-label">Terminal</div>
+        </div>
+        <div class="dock-icon" onclick="openPanel('visualizer')">
+            🔮
+            <div class="dock-label">Visualizer</div>
+        </div>
+        <div class="dock-icon" onclick="openPanel('models')">
+            📚
+            <div class="dock-label">Models</div>
+        </div>
+    </div>
+
+    <!-- Notification Center -->
+    <div class="notification-center" id="notificationCenter"></div>
+
+    <script>
+        // Neural Background Animation
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const nodes = [];
+        const nodeCount = 50;
+
+        class Node {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = 3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#b366ff';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#b366ff';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < nodeCount; i++) {
+            nodes.push(new Node());
+        }
+
+        function connectNodes() {
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.strokeStyle = `rgba(179, 102, 255, ${1 - distance / 150})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            nodes.forEach(node => {
+                node.update();
+                node.draw();
+            });
+
+            connectNodes();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Panel Management
+        let activePanels = [];
+        let draggedPanel = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openPanel(panelId) {
+            const panel = document.getElementById(panelId);
+            if (!panel) return;
+
+            panel.classList.add('active');
+            if (!activePanels.includes(panelId)) {
+                activePanels.push(panelId);
+            }
+
+            addNotification('Panel Opened', `${panelId.charAt(0).toUpperCase() + panelId.slice(1)} panel is now active`);
+        }
+
+        function closePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            if (!panel) return;
+
+            panel.classList.remove('active');
+            activePanels = activePanels.filter(id => id !== panelId);
+        }
+
+        function minimizePanel(panelId) {
+            closePanel(panelId);
+        }
+
+        function maximizePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            if (!panel) return;
+
+            if (panel.style.width === '100vw') {
+                panel.style.width = '750px';
+                panel.style.height = '600px';
+                panel.style.left = '400px';
+                panel.style.top = '100px';
+            } else {
+                panel.style.width = '100vw';
+                panel.style.height = 'calc(100vh - 80px)';
+                panel.style.left = '0';
+                panel.style.top = '0';
+            }
+        }
+
+        // Drag functionality
+        document.querySelectorAll('.panel-header').forEach(header => {
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.panel-controls')) return;
+
+                draggedPanel = this.parentElement;
+                const rect = draggedPanel.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (draggedPanel) {
+                draggedPanel.style.left = (e.clientX - dragOffset.x) + 'px';
+                draggedPanel.style.top = (e.clientY - dragOffset.y) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            draggedPanel = null;
+        });
+
+        // Terminal
+        function handleTerminal(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('terminalInput');
+                const output = document.getElementById('terminalOutput');
+                const command = input.value.trim();
+
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                line.textContent = 'neuro@workspace:~$ ' + command;
+                output.appendChild(line);
+
+                let response = '';
+                if (command === 'help') {
+                    response = 'Available commands:\n  train - Start model training\n  eval - Evaluate model\n  list - List models\n  status - Show system status\n  clear - Clear terminal';
+                } else if (command === 'train') {
+                    response = 'Starting training session...\nModel: ResNet-50\nDataset: CIFAR-10\nEpochs: 100\nBatch size: 32';
+                } else if (command === 'eval') {
+                    response = 'Evaluating model...\nAccuracy: 94.7%\nLoss: 0.0234\nF1-Score: 0.946';
+                } else if (command === 'list') {
+                    response = 'Available models:\n  1. ResNet-50\n  2. BERT\n  3. StyleGAN\n  4. WaveNet';
+                } else if (command === 'status') {
+                    response = 'System Status:\nGPU: 78% utilized\nMemory: 12.4 GB / 16 GB\nActive jobs: 3\nQueue: 2 pending';
+                } else if (command === 'clear') {
+                    output.innerHTML = '<div class="terminal-line">neuro@workspace:~$</div>';
+                    input.value = '';
+                    return;
+                } else if (command !== '') {
+                    response = `Command not found: ${command}\nType 'help' for available commands`;
+                }
+
+                if (response) {
+                    const responseLine = document.createElement('div');
+                    responseLine.className = 'terminal-line';
+                    responseLine.textContent = response;
+                    output.appendChild(responseLine);
+                }
+
+                const prompt = document.createElement('div');
+                prompt.className = 'terminal-line';
+                prompt.textContent = 'neuro@workspace:~$';
+                output.appendChild(prompt);
+
+                input.value = '';
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // Training Functions
+        let isTraining = false;
+
+        function startTraining() {
+            isTraining = true;
+            addNotification('Training Started', 'Model training in progress...');
+
+            const interval = setInterval(() => {
+                if (!isTraining) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                const loss = (0.5 - Math.random() * 0.5).toFixed(4);
+                const acc = (85 + Math.random() * 15).toFixed(1);
+
+                document.getElementById('lossValue').textContent = loss;
+                document.getElementById('accValue').textContent = acc + '%';
+            }, 1000);
+        }
+
+        function pauseTraining() {
+            isTraining = false;
+            addNotification('Training Paused', 'You can resume training anytime');
+        }
+
+        function stopTraining() {
+            isTraining = false;
+            addNotification('Training Stopped', 'Training session ended');
+        }
+
+        function saveModel() {
+            addNotification('Model Saved', 'Model saved successfully to disk');
+        }
+
+        function exportModel() {
+            addNotification('Exporting Model', 'Model export initiated...');
+        }
+
+        // Dataset Functions
+        function loadDataset(name) {
+            addNotification('Loading Dataset', `Loading ${name.toUpperCase()} dataset...`);
+
+            const preview = document.getElementById('datasetPreview');
+            if (!preview) return;
+
+            preview.innerHTML = '';
+            for (let i = 0; i < 48; i++) {
+                const sample = document.createElement('div');
+                sample.className = 'data-sample';
+                sample.textContent = Math.floor(Math.random() * 10);
+                preview.appendChild(sample);
+            }
+        }
+
+        // Network Visualizer
+        function initNNVisualizer() {
+            const container = document.getElementById('nnVisualizer');
+            if (!container) return;
+
+            const layers = [4, 6, 6, 3];
+
+            layers.forEach((count, layerIndex) => {
+                const layer = document.createElement('div');
+                layer.className = 'nn-layer';
+
+                for (let i = 0; i < count; i++) {
+                    const neuron = document.createElement('div');
+                    neuron.className = 'nn-neuron';
+                    neuron.style.animationDelay = `${(layerIndex * 0.2 + i * 0.1)}s`;
+                    layer.appendChild(neuron);
+                }
+
+                container.appendChild(layer);
+            });
+        }
+
+        setTimeout(initNNVisualizer, 100);
+
+        // Canvas Visualizer
+        function randomizeNetwork() {
+            addNotification('Network Randomized', 'Weights have been randomized');
+        }
+
+        function animateForward() {
+            addNotification('Forward Pass', 'Running forward propagation...');
+        }
+
+        function animateBackward() {
+            addNotification('Backward Pass', 'Running backpropagation...');
+        }
+
+        function clearCanvas() {
+            const canvas = document.getElementById('networkCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // Notifications
+        function addNotification(title, message) {
+            const center = document.getElementById('notificationCenter');
+            if (!center) return;
+
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-title">${title}</div>
+                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div>${message}</div>
+            `;
+
+            center.insertBefore(notif, center.firstChild);
+
+            setTimeout(() => {
+                if (notif.parentElement) {
+                    notif.remove();
+                }
+            }, 5000);
+        }
+
+        // Update stats
+        setInterval(() => {
+            document.getElementById('activeModels').textContent = Math.floor(10 + Math.random() * 5);
+            document.getElementById('trainingJobs').textContent = Math.floor(2 + Math.random() * 3);
+            document.getElementById('gpuUsage').textContent = (70 + Math.random() * 20).toFixed(0) + '%';
+            document.getElementById('accuracy').textContent = (92 + Math.random() * 5).toFixed(1) + '%';
+        }, 3000);
+
+        // Welcome notification
+        setTimeout(() => {
+            addNotification('Welcome to NeuroNet', 'Neural Desktop v4.1 initialized successfully');
+        }, 1000);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>

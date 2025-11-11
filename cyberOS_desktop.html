@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberOS v7.2 - Virtual Desktop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff41;
+            overflow: hidden;
+            height: 100vh;
+            cursor: default;
+        }
+
+        #desktop {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background:
+                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 0 50px, 50px 0; }
+        }
+
+        .window {
+            position: absolute;
+            background: rgba(10, 14, 39, 0.95);
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5), inset 0 0 20px rgba(0, 255, 65, 0.1);
+            display: none;
+            min-width: 400px;
+            min-height: 300px;
+            backdrop-filter: blur(10px);
+        }
+
+        .window.active {
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .window.minimized {
+            display: none;
+        }
+
+        .titlebar {
+            background: linear-gradient(90deg, #00ff41, #00cc33);
+            color: #000;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+            user-select: none;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .titlebar-text {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .titlebar-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .titlebar-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-minimize { background: #ffaa00; color: #000; }
+        .btn-maximize { background: #00ff00; color: #000; }
+        .btn-close { background: #ff0000; color: #fff; }
+
+        .titlebar-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .window-content {
+            flex: 1;
+            padding: 15px;
+            overflow: auto;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .icon {
+            position: absolute;
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .icon:hover {
+            background: rgba(0, 255, 65, 0.2);
+            transform: scale(1.05);
+        }
+
+        .icon-image {
+            font-size: 48px;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 65, 0.7));
+        }
+
+        .icon-label {
+            font-size: 12px;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, rgba(0, 255, 65, 0.2), rgba(0, 255, 65, 0.3));
+            border-top: 2px solid #00ff41;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+        }
+
+        #start-btn {
+            background: linear-gradient(135deg, #00ff41, #00cc33);
+            color: #000;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            transition: all 0.3s;
+        }
+
+        #start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 65, 0.8);
+        }
+
+        .taskbar-app {
+            background: rgba(0, 255, 65, 0.2);
+            border: 1px solid #00ff41;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .taskbar-app:hover {
+            background: rgba(0, 255, 65, 0.4);
+        }
+
+        .taskbar-app.active {
+            background: rgba(0, 255, 65, 0.5);
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        #start-menu {
+            position: fixed;
+            bottom: 55px;
+            left: 15px;
+            width: 350px;
+            background: rgba(10, 14, 39, 0.98);
+            border: 2px solid #00ff41;
+            border-radius: 12px;
+            display: none;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.6);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+
+        #start-menu.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .menu-header {
+            background: linear-gradient(135deg, #00ff41, #00cc33);
+            color: #000;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .menu-section {
+            padding: 15px;
+        }
+
+        .menu-item {
+            padding: 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-item:hover {
+            background: rgba(0, 255, 65, 0.3);
+            transform: translateX(5px);
+        }
+
+        .terminal-output {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .terminal-input input {
+            flex: 1;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .file-manager {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .file-tree {
+            border-right: 1px solid #00ff41;
+            padding-right: 10px;
+            overflow-y: auto;
+        }
+
+        .tree-item {
+            padding: 8px;
+            margin: 3px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tree-item:hover {
+            background: rgba(0, 255, 65, 0.2);
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-item:hover {
+            background: rgba(0, 255, 65, 0.2);
+            transform: scale(1.05);
+        }
+
+        .file-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .system-monitor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .monitor-card {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .monitor-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00ff41;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41, #00cc33);
+            transition: width 0.5s;
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .network-graph {
+            height: 150px;
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .graph-line {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            background: #00ff41;
+            box-shadow: 0 0 5px #00ff41;
+            transition: height 0.3s;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            padding: 15px;
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+        }
+
+        .browser-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            border-radius: 8px;
+        }
+
+        .browser-btn {
+            background: rgba(0, 255, 65, 0.2);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .browser-btn:hover {
+            background: rgba(0, 255, 65, 0.4);
+        }
+
+        .url-bar {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .browser-content {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid #00ff41;
+        }
+
+        .chat-user {
+            font-weight: bold;
+            color: #00ff41;
+            margin-bottom: 5px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #00ff41, #00cc33);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .context-menu {
+            position: fixed;
+            background: rgba(10, 14, 39, 0.98);
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            padding: 5px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+        }
+
+        .context-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .context-item:hover {
+            background: rgba(0, 255, 65, 0.3);
+        }
+
+        #clock {
+            margin-left: auto;
+            font-weight: bold;
+            padding: 8px 15px;
+            background: rgba(0, 255, 65, 0.2);
+            border-radius: 6px;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 14, 39, 0.98);
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            padding: 15px 20px;
+            min-width: 300px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.6);
+            animation: slideInRight 0.5s ease-out;
+            z-index: 3000;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .glitch {
+            position: relative;
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; }
+            25% { text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff; }
+            50% { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; }
+            75% { text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff; }
+            100% { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; }
+        }
+    </style>
+</head>
+<body>
+    <div id="desktop">
+        <!-- Desktop Icons -->
+        <div class="icon" style="top: 20px; left: 20px;" ondblclick="openWindow('terminal')">
+            <div class="icon-image">💻</div>
+            <div class="icon-label">Terminal</div>
+        </div>
+
+        <div class="icon" style="top: 20px; left: 120px;" ondblclick="openWindow('files')">
+            <div class="icon-image">📁</div>
+            <div class="icon-label">Files</div>
+        </div>
+
+        <div class="icon" style="top: 20px; left: 220px;" ondblclick="openWindow('monitor')">
+            <div class="icon-image">📊</div>
+            <div class="icon-label">System</div>
+        </div>
+
+        <div class="icon" style="top: 140px; left: 20px;" ondblclick="openWindow('editor')">
+            <div class="icon-image">📝</div>
+            <div class="icon-label">Code</div>
+        </div>
+
+        <div class="icon" style="top: 140px; left: 120px;" ondblclick="openWindow('browser')">
+            <div class="icon-image">🌐</div>
+            <div class="icon-label">Browser</div>
+        </div>
+
+        <div class="icon" style="top: 140px; left: 220px;" ondblclick="openWindow('chat')">
+            <div class="icon-image">💬</div>
+            <div class="icon-label">Chat</div>
+        </div>
+
+        <div class="icon" style="top: 260px; left: 20px;" ondblclick="openWindow('music')">
+            <div class="icon-image">🎵</div>
+            <div class="icon-label">Music</div>
+        </div>
+
+        <div class="icon" style="top: 260px; left: 120px;" ondblclick="openWindow('settings')">
+            <div class="icon-image">⚙️</div>
+            <div class="icon-label">Settings</div>
+        </div>
+    </div>
+
+    <!-- Terminal Window -->
+    <div id="terminal" class="window" style="left: 100px; top: 100px; width: 700px; height: 500px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>💻</span>
+                <span>Terminal - CyberShell v3.5</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('terminal')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('terminal')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('terminal')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="terminal-output" id="terminalOutput">CyberOS v7.2 - Terminal Ready
+Type 'help' for available commands
+
+user@cyberOS:~$ </div>
+            <div class="terminal-input">
+                <span style="color: #00ff41;">$</span>
+                <input type="text" id="terminalInput" onkeypress="handleTerminalInput(event)" placeholder="Enter command...">
+            </div>
+        </div>
+    </div>
+
+    <!-- File Manager Window -->
+    <div id="files" class="window" style="left: 150px; top: 80px; width: 800px; height: 600px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>📁</span>
+                <span>File Manager - /home/user</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('files')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('files')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('files')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="file-manager">
+                <div class="file-tree">
+                    <div class="tree-item" onclick="loadDirectory('home')">🏠 Home</div>
+                    <div class="tree-item" onclick="loadDirectory('documents')">📄 Documents</div>
+                    <div class="tree-item" onclick="loadDirectory('downloads')">⬇️ Downloads</div>
+                    <div class="tree-item" onclick="loadDirectory('pictures')">🖼️ Pictures</div>
+                    <div class="tree-item" onclick="loadDirectory('music')">🎵 Music</div>
+                    <div class="tree-item" onclick="loadDirectory('videos')">🎬 Videos</div>
+                    <div class="tree-item" onclick="loadDirectory('projects')">💼 Projects</div>
+                </div>
+                <div class="file-grid" id="fileGrid">
+                    <!-- Files will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Monitor Window -->
+    <div id="monitor" class="window" style="left: 200px; top: 120px; width: 700px; height: 550px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>📊</span>
+                <span>System Monitor</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('monitor')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('monitor')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('monitor')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="system-monitor">
+                <div class="monitor-card">
+                    <div class="monitor-title">CPU Usage</div>
+                    <div class="stat-value" id="cpuUsage">0%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpuBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-title">Memory</div>
+                    <div class="stat-value" id="memUsage">0 GB / 16 GB</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="memBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-title">Disk I/O</div>
+                    <div class="stat-value" id="diskIO">0 MB/s</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="diskBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-title">Network</div>
+                    <div class="stat-value" id="netSpeed">0 Mbps</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="netBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <div class="monitor-title">Network Activity</div>
+                <div class="network-graph" id="networkGraph"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Editor Window -->
+    <div id="editor" class="window" style="left: 180px; top: 90px; width: 750px; height: 600px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>📝</span>
+                <span>Code Editor - untitled.js</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('editor')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('editor')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('editor')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <textarea class="code-editor" id="codeEditor" placeholder="// Start coding...">// Welcome to CyberOS Code Editor
+function hackTheMainframe() {
+    console.log('Initializing neural interface...');
+    const connection = establishSecureLink();
+
+    if (connection.status === 'active') {
+        return decryptDataStream(connection.data);
+    }
+
+    return null;
+}
+
+// Run the program
+hackTheMainframe();</textarea>
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <button class="browser-btn" onclick="runCode()">▶️ Run</button>
+                <button class="browser-btn" onclick="saveCode()">💾 Save</button>
+                <button class="browser-btn" onclick="clearCode()">🗑️ Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browser Window -->
+    <div id="browser" class="window" style="left: 220px; top: 100px; width: 800px; height: 600px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>🌐</span>
+                <span>CyberBrowser</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('browser')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('browser')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('browser')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="browser-toolbar">
+                <button class="browser-btn" onclick="browserBack()">◀️</button>
+                <button class="browser-btn" onclick="browserForward()">▶️</button>
+                <button class="browser-btn" onclick="browserRefresh()">🔄</button>
+                <input type="text" class="url-bar" id="urlBar" placeholder="Enter URL..." value="cyber://home">
+                <button class="browser-btn" onclick="browserGo()">Go</button>
+            </div>
+            <div class="browser-content" id="browserContent">
+                <h2 class="glitch">Welcome to the CyberNet</h2>
+                <p style="margin: 20px 0;">You are now connected to the global neural network.</p>
+                <ul style="line-height: 2;">
+                    <li>🔐 Secure Connection Established</li>
+                    <li>🌐 Anonymous Browsing Enabled</li>
+                    <li>⚡ Quantum Encryption Active</li>
+                    <li>🛡️ Firewall Status: Protected</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Window -->
+    <div id="chat" class="window" style="left: 250px; top: 110px; width: 500px; height: 500px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>💬</span>
+                <span>CyberChat - #general</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('chat')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('chat')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('chat')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message">
+                        <div class="chat-user">System</div>
+                        <div>Welcome to CyberChat! You are now connected.</div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="handleChatInput(event)">
+                    <button class="send-btn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Music Player Window -->
+    <div id="music" class="window" style="left: 280px; top: 140px; width: 450px; height: 400px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>🎵</span>
+                <span>Music Player</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('music')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('music')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('music')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div style="text-align: center;">
+                <h2>Now Playing</h2>
+                <div style="font-size: 64px; margin: 30px 0;">🎧</div>
+                <div style="font-size: 20px; margin: 10px 0;">Neon Dreams</div>
+                <div style="opacity: 0.7; margin-bottom: 20px;">Cyber Synthwave</div>
+                <div class="progress-bar" style="margin: 20px 0;">
+                    <div class="progress-fill" id="musicProgress" style="width: 35%"></div>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                    <button class="browser-btn" style="font-size: 24px;">⏮️</button>
+                    <button class="browser-btn" style="font-size: 24px;" id="playPauseBtn" onclick="togglePlay()">⏸️</button>
+                    <button class="browser-btn" style="font-size: 24px;">⏭️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Window -->
+    <div id="settings" class="window" style="left: 300px; top: 130px; width: 600px; height: 500px;">
+        <div class="titlebar">
+            <div class="titlebar-text">
+                <span>⚙️</span>
+                <span>System Settings</span>
+            </div>
+            <div class="titlebar-controls">
+                <button class="titlebar-btn btn-minimize" onclick="minimizeWindow('settings')">_</button>
+                <button class="titlebar-btn btn-maximize" onclick="maximizeWindow('settings')">□</button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow('settings')">×</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <h3>Display Settings</h3>
+            <div style="margin: 20px 0;">
+                <label>Theme: <select class="url-bar" style="width: 200px;">
+                    <option>Cyber Green (Default)</option>
+                    <option>Dark Mode</option>
+                    <option>Matrix</option>
+                </select></label>
+            </div>
+            <div style="margin: 20px 0;">
+                <label>Resolution: <select class="url-bar" style="width: 200px;">
+                    <option>1920x1080</option>
+                    <option>2560x1440</option>
+                    <option>3840x2160</option>
+                </select></label>
+            </div>
+            <h3 style="margin-top: 30px;">System Info</h3>
+            <div style="margin-top: 20px; line-height: 2;">
+                <div>OS: CyberOS v7.2</div>
+                <div>Kernel: Linux 5.15.0-cyber</div>
+                <div>Architecture: x86_64</div>
+                <div>Memory: 16 GB</div>
+                <div>Processor: Quantum Core i9</div>
+                <div>Graphics: NVIDIA RTX 4090</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div id="taskbar">
+        <button id="start-btn" onclick="toggleStartMenu()">⚡ START</button>
+        <div id="taskbarApps"></div>
+        <div id="clock">00:00:00</div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu">
+        <div class="menu-header">
+            <div class="glitch">CyberOS</div>
+            <div style="font-size: 12px; margin-top: 5px; font-weight: normal;">Version 7.2.1</div>
+        </div>
+        <div class="menu-section">
+            <div class="menu-item" onclick="openWindow('terminal'); toggleStartMenu()">
+                <span>💻</span>
+                <span>Terminal</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('files'); toggleStartMenu()">
+                <span>📁</span>
+                <span>File Manager</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('monitor'); toggleStartMenu()">
+                <span>📊</span>
+                <span>System Monitor</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('editor'); toggleStartMenu()">
+                <span>📝</span>
+                <span>Code Editor</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('browser'); toggleStartMenu()">
+                <span>🌐</span>
+                <span>Browser</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('chat'); toggleStartMenu()">
+                <span>💬</span>
+                <span>Chat</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('settings'); toggleStartMenu()">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </div>
+            <div class="menu-item" onclick="showNotification('System', 'Logging out...'); setTimeout(() => location.reload(), 1000)">
+                <span>🚪</span>
+                <span>Logout</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-item" onclick="hideContextMenu()">📋 Copy</div>
+        <div class="context-item" onclick="hideContextMenu()">📄 Paste</div>
+        <div class="context-item" onclick="hideContextMenu()">✂️ Cut</div>
+        <div class="context-item" onclick="hideContextMenu()">🗑️ Delete</div>
+        <div class="context-item" onclick="hideContextMenu()">ℹ️ Properties</div>
+    </div>
+
+    <script>
+        // Window Management
+        let activeWindows = [];
+        let zIndexCounter = 100;
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openWindow(windowId) {
+            const win = document.getElementById(windowId);
+            if (!win) return;
+
+            win.classList.add('active');
+            win.classList.remove('minimized');
+            win.style.zIndex = ++zIndexCounter;
+
+            if (!activeWindows.includes(windowId)) {
+                activeWindows.push(windowId);
+                updateTaskbar();
+            }
+
+            showNotification('Application', `${windowId.charAt(0).toUpperCase() + windowId.slice(1)} opened`);
+        }
+
+        function closeWindow(windowId) {
+            const win = document.getElementById(windowId);
+            if (!win) return;
+
+            win.classList.remove('active');
+            activeWindows = activeWindows.filter(id => id !== windowId);
+            updateTaskbar();
+        }
+
+        function minimizeWindow(windowId) {
+            const win = document.getElementById(windowId);
+            if (!win) return;
+
+            win.classList.add('minimized');
+            win.classList.remove('active');
+        }
+
+        function maximizeWindow(windowId) {
+            const win = document.getElementById(windowId);
+            if (!win) return;
+
+            if (win.style.width === '100vw') {
+                win.style.width = '800px';
+                win.style.height = '600px';
+                win.style.left = '100px';
+                win.style.top = '100px';
+            } else {
+                win.style.width = '100vw';
+                win.style.height = 'calc(100vh - 50px)';
+                win.style.left = '0';
+                win.style.top = '0';
+            }
+        }
+
+        function updateTaskbar() {
+            const taskbarApps = document.getElementById('taskbarApps');
+            taskbarApps.innerHTML = '';
+
+            activeWindows.forEach(id => {
+                const app = document.createElement('div');
+                app.className = 'taskbar-app';
+                const win = document.getElementById(id);
+                if (win && !win.classList.contains('minimized')) {
+                    app.classList.add('active');
+                }
+                app.textContent = id.charAt(0).toUpperCase() + id.slice(1);
+                app.onclick = () => {
+                    if (win.classList.contains('minimized')) {
+                        win.classList.remove('minimized');
+                        win.classList.add('active');
+                    } else {
+                        win.style.zIndex = ++zIndexCounter;
+                    }
+                };
+                taskbarApps.appendChild(app);
+            });
+        }
+
+        // Drag functionality
+        document.querySelectorAll('.titlebar').forEach(titlebar => {
+            titlebar.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.titlebar-controls')) return;
+
+                draggedWindow = this.parentElement;
+                const rect = draggedWindow.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                draggedWindow.style.zIndex = ++zIndexCounter;
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (draggedWindow) {
+                draggedWindow.style.left = (e.clientX - dragOffset.x) + 'px';
+                draggedWindow.style.top = (e.clientY - dragOffset.y) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            draggedWindow = null;
+        });
+
+        // Start Menu
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('start-menu');
+            const startBtn = document.getElementById('start-btn');
+            if (!menu.contains(e.target) && e.target !== startBtn) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Terminal
+        function handleTerminalInput(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('terminalInput');
+                const output = document.getElementById('terminalOutput');
+                const command = input.value.trim();
+
+                output.textContent += command + '\n';
+
+                if (command === 'help') {
+                    output.textContent += 'Available commands: help, clear, ls, whoami, date, neofetch, hack\n';
+                } else if (command === 'clear') {
+                    output.textContent = 'user@cyberOS:~$ ';
+                } else if (command === 'ls') {
+                    output.textContent += 'Documents  Downloads  Pictures  Music  Videos  Projects\n';
+                } else if (command === 'whoami') {
+                    output.textContent += 'cyber_user\n';
+                } else if (command === 'date') {
+                    output.textContent += new Date().toString() + '\n';
+                } else if (command === 'neofetch') {
+                    output.textContent += `
+       ___           CyberOS v7.2
+      /   \\          Kernel: 5.15.0-cyber
+     | O O |         Uptime: 4 hours
+      \\___/          Packages: 2048
+      /   \\          Shell: cybershell
+     /     \\         Terminal: CyberTerm
+                     CPU: Quantum Core i9
+                     Memory: 8.3 GB / 16 GB
+`;
+                } else if (command === 'hack') {
+                    output.textContent += 'Initializing hack sequence...\n';
+                    output.textContent += 'Bypassing firewall... ✓\n';
+                    output.textContent += 'Decrypting data... ✓\n';
+                    output.textContent += 'Access granted!\n';
+                } else if (command !== '') {
+                    output.textContent += `Command not found: ${command}\n`;
+                }
+
+                output.textContent += 'user@cyberOS:~$ ';
+                input.value = '';
+                output.parentElement.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // File Manager
+        const fileSystem = {
+            home: [
+                { name: 'readme.txt', icon: '📄', type: 'file' },
+                { name: 'project.zip', icon: '📦', type: 'file' },
+                { name: 'notes.md', icon: '📝', type: 'file' }
+            ],
+            documents: [
+                { name: 'report.pdf', icon: '📄', type: 'file' },
+                { name: 'presentation.pptx', icon: '📊', type: 'file' },
+                { name: 'budget.xlsx', icon: '📈', type: 'file' }
+            ],
+            downloads: [
+                { name: 'cyberpunk.exe', icon: '⚙️', type: 'file' },
+                { name: 'data.json', icon: '📋', type: 'file' },
+                { name: 'archive.tar.gz', icon: '📦', type: 'file' }
+            ],
+            pictures: [
+                { name: 'vacation.jpg', icon: '🖼️', type: 'file' },
+                { name: 'screenshot.png', icon: '📷', type: 'file' },
+                { name: 'wallpaper.jpg', icon: '🎨', type: 'file' }
+            ],
+            music: [
+                { name: 'neon_dreams.mp3', icon: '🎵', type: 'file' },
+                { name: 'synthwave.flac', icon: '🎶', type: 'file' },
+                { name: 'playlist.m3u', icon: '📻', type: 'file' }
+            ],
+            videos: [
+                { name: 'tutorial.mp4', icon: '🎬', type: 'file' },
+                { name: 'demo.webm', icon: '📹', type: 'file' },
+                { name: 'recording.mkv', icon: '🎥', type: 'file' }
+            ],
+            projects: [
+                { name: 'webapp', icon: '📁', type: 'folder' },
+                { name: 'ai_model', icon: '📁', type: 'folder' },
+                { name: 'game_dev', icon: '📁', type: 'folder' }
+            ]
+        };
+
+        function loadDirectory(dir) {
+            const grid = document.getElementById('fileGrid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+            const files = fileSystem[dir] || [];
+
+            files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-icon">${file.icon}</div>
+                    <div>${file.name}</div>
+                `;
+                item.ondblclick = () => {
+                    showNotification('File Manager', `Opening ${file.name}...`);
+                };
+                grid.appendChild(item);
+            });
+        }
+
+        // Initialize with home directory
+        setTimeout(() => loadDirectory('home'), 100);
+
+        // System Monitor
+        function updateSystemMonitor() {
+            const cpu = 30 + Math.random() * 40;
+            const mem = 40 + Math.random() * 30;
+            const disk = 20 + Math.random() * 50;
+            const net = 10 + Math.random() * 60;
+
+            document.getElementById('cpuUsage').textContent = cpu.toFixed(1) + '%';
+            document.getElementById('cpuBar').style.width = cpu + '%';
+
+            document.getElementById('memUsage').textContent = (mem * 16 / 100).toFixed(1) + ' GB / 16 GB';
+            document.getElementById('memBar').style.width = mem + '%';
+
+            document.getElementById('diskIO').textContent = disk.toFixed(1) + ' MB/s';
+            document.getElementById('diskBar').style.width = disk + '%';
+
+            document.getElementById('netSpeed').textContent = net.toFixed(1) + ' Mbps';
+            document.getElementById('netBar').style.width = net + '%';
+
+            // Update network graph
+            const graph = document.getElementById('networkGraph');
+            if (graph) {
+                const line = document.createElement('div');
+                line.className = 'graph-line';
+                line.style.height = (Math.random() * 80 + 20) + '%';
+                line.style.left = (graph.children.length * 3) + 'px';
+                graph.appendChild(line);
+
+                if (graph.children.length > 100) {
+                    graph.removeChild(graph.firstChild);
+                }
+            }
+        }
+
+        setInterval(updateSystemMonitor, 1000);
+
+        // Code Editor
+        function runCode() {
+            showNotification('Code Editor', 'Code execution started...');
+            setTimeout(() => {
+                showNotification('Code Editor', 'Program completed successfully!');
+            }, 2000);
+        }
+
+        function saveCode() {
+            showNotification('Code Editor', 'File saved: untitled.js');
+        }
+
+        function clearCode() {
+            document.getElementById('codeEditor').value = '';
+        }
+
+        // Browser
+        function browserBack() {
+            showNotification('Browser', 'Going back...');
+        }
+
+        function browserForward() {
+            showNotification('Browser', 'Going forward...');
+        }
+
+        function browserRefresh() {
+            showNotification('Browser', 'Refreshing page...');
+        }
+
+        function browserGo() {
+            const url = document.getElementById('urlBar').value;
+            showNotification('Browser', `Loading ${url}...`);
+        }
+
+        // Chat
+        function handleChatInput(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+            const message = input.value.trim();
+
+            if (message) {
+                const msg = document.createElement('div');
+                msg.className = 'chat-message';
+                msg.innerHTML = `
+                    <div class="chat-user">You</div>
+                    <div>${message}</div>
+                `;
+                messages.appendChild(msg);
+                input.value = '';
+                messages.scrollTop = messages.scrollHeight;
+
+                // Simulate response
+                setTimeout(() => {
+                    const response = document.createElement('div');
+                    response.className = 'chat-message';
+                    response.innerHTML = `
+                        <div class="chat-user">CyberBot</div>
+                        <div>Message received: "${message}"</div>
+                    `;
+                    messages.appendChild(response);
+                    messages.scrollTop = messages.scrollHeight;
+                }, 1000);
+            }
+        }
+
+        // Music Player
+        let isPlaying = true;
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸️' : '▶️';
+        }
+
+        setInterval(() => {
+            if (isPlaying) {
+                const progress = document.getElementById('musicProgress');
+                let width = parseFloat(progress.style.width);
+                width = (width + 0.5) % 100;
+                progress.style.width = width + '%';
+            }
+        }, 500);
+
+        // Context Menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            const menu = document.getElementById('contextMenu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        });
+
+        document.addEventListener('click', function() {
+            hideContextMenu();
+        });
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        // Notifications
+        function showNotification(title, message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <div>${message}</div>
+            `;
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.remove();
+            }, 3000);
+        }
+
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Welcome notification
+        setTimeout(() => {
+            showNotification('Welcome', 'CyberOS v7.2 loaded successfully!');
+        }, 1000);
+    </script>
+</body>
+</html>

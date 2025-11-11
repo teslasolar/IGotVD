@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumOS - Superposition Desktop v3.0</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @keyframes quantumFlux {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+
+        @keyframes entangle {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(180deg); }
+        }
+
+        @keyframes collapse {
+            0% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #001a33, #003366, #001a4d);
+            color: #00ffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #quantum-field {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .qubit {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #00ffff, #0088ff);
+            border-radius: 50%;
+            animation: quantumFlux 2s infinite;
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        .desktop {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .quantum-window {
+            position: absolute;
+            background: rgba(0, 26, 51, 0.95);
+            border: 3px solid #00ffff;
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+            display: none;
+            min-width: 450px;
+            min-height: 350px;
+        }
+
+        .quantum-window.active {
+            display: flex;
+            flex-direction: column;
+            animation: collapse 0.5s ease-out;
+        }
+
+        .window-header {
+            background: linear-gradient(90deg, #00ffff, #0088ff);
+            color: #000;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+            border-radius: 12px 12px 0 0;
+            font-weight: bold;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .window-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .win-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .win-btn:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .btn-min { background: #ffaa00; color: #000; }
+        .btn-max { background: #00ff00; color: #000; }
+        .btn-close { background: #ff0000; color: #fff; }
+
+        .window-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .quantum-icon {
+            position: absolute;
+            width: 90px;
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: quantumFlux 3s infinite;
+        }
+
+        .quantum-icon:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+        }
+
+        .icon-symbol {
+            font-size: 56px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 10px #00ffff);
+        }
+
+        .icon-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        #quantum-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: linear-gradient(180deg, rgba(0, 255, 255, 0.3), rgba(0, 136, 255, 0.4));
+            border-top: 3px solid #00ffff;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            box-shadow: 0 -5px 30px rgba(0, 255, 255, 0.3);
+        }
+
+        #quantum-menu-btn {
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            transition: all 0.3s;
+        }
+
+        #quantum-menu-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 25px rgba(0, 255, 255, 0.8);
+        }
+
+        .bar-app {
+            background: rgba(0, 255, 255, 0.2);
+            border: 2px solid #00ffff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .bar-app:hover {
+            background: rgba(0, 255, 255, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .bar-app.active {
+            background: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        #quantum-menu {
+            position: fixed;
+            bottom: 75px;
+            left: 20px;
+            width: 400px;
+            background: rgba(0, 26, 51, 0.98);
+            border: 3px solid #00ffff;
+            border-radius: 18px;
+            display: none;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.7);
+            backdrop-filter: blur(25px);
+            z-index: 1001;
+        }
+
+        #quantum-menu.active {
+            display: block;
+            animation: collapse 0.4s ease-out;
+        }
+
+        .menu-top {
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            color: #000;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .menu-apps {
+            padding: 20px;
+        }
+
+        .menu-app {
+            padding: 15px;
+            margin: 8px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 15px;
+        }
+
+        .menu-app:hover {
+            background: rgba(0, 255, 255, 0.3);
+            transform: translateX(8px);
+        }
+
+        .circuit-builder {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .gate-palette {
+            border-right: 2px solid #00ffff;
+            padding-right: 15px;
+        }
+
+        .quantum-gate {
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            color: #000;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: move;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .quantum-gate:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        .circuit-canvas {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .qubit-wire {
+            height: 2px;
+            background: #00ffff;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .qubit-label {
+            position: absolute;
+            left: -30px;
+            top: -10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .state-visualizer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .state-card {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .state-ket {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+        }
+
+        .state-prob {
+            font-size: 18px;
+            color: #0088ff;
+        }
+
+        .bloch-sphere {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border: 3px solid #00ffff;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.2), rgba(0, 136, 255, 0.1));
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
+        }
+
+        .bloch-axis {
+            position: absolute;
+            background: #00ffff;
+        }
+
+        .bloch-vector {
+            position: absolute;
+            width: 4px;
+            height: 150px;
+            background: linear-gradient(to bottom, #ff00ff, #00ffff);
+            left: 50%;
+            top: 50%;
+            transform-origin: top center;
+            animation: entangle 3s infinite;
+        }
+
+        .simulator-console {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 18px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 450px;
+            overflow-y: auto;
+        }
+
+        .console-line {
+            margin: 6px 0;
+            line-height: 1.8;
+        }
+
+        .console-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .console-prompt {
+            color: #ff00ff;
+            font-weight: bold;
+        }
+
+        .console-field {
+            flex: 1;
+            background: rgba(0, 255, 255, 0.2);
+            border: 2px solid #00ffff;
+            border-radius: 6px;
+            padding: 10px;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .quantum-button {
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin: 5px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .quantum-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.7);
+        }
+
+        .algorithm-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .algorithm-item {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .algorithm-item:hover {
+            background: rgba(0, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .algorithm-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .algorithm-desc {
+            font-size: 13px;
+            color: #88ddff;
+            line-height: 1.6;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-box {
+            background: rgba(0, 255, 255, 0.15);
+            border: 2px solid #00ffff;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #88ddff;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 30px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+        }
+
+        .entangled-pair {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .entangled-qubit {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #ff00ff, #ff0088);
+            border-radius: 50%;
+            position: relative;
+            animation: entangle 2s infinite;
+            box-shadow: 0 0 40px #ff00ff;
+        }
+
+        .entanglement-line {
+            width: 200px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+            animation: quantumFlux 1s infinite;
+        }
+
+        .notification-quantum {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 26, 51, 0.98);
+            border: 3px solid #00ffff;
+            border-radius: 12px;
+            padding: 18px 25px;
+            min-width: 320px;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            animation: collapse 0.5s ease-out;
+            z-index: 3000;
+        }
+
+        .notif-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #00ffff;
+        }
+
+        .notif-body {
+            font-size: 14px;
+            color: #88ddff;
+        }
+
+        #system-time {
+            margin-left: auto;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 10px 20px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 10px;
+            border: 2px solid #00ffff;
+        }
+
+        .code-quantum {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .keyword { color: #ff00ff; font-weight: bold; }
+        .function { color: #00ffff; }
+        .number { color: #ffaa00; }
+        .comment { color: #888888; font-style: italic; }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00ffff;
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0088ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="quantum-field"></div>
+
+    <div class="desktop">
+        <!-- Quantum Icons -->
+        <div class="quantum-icon" style="top: 60px; left: 60px;" ondblclick="openQuantumWindow('circuit')">
+            <div class="icon-symbol">🔮</div>
+            <div class="icon-text">Circuit<br>Builder</div>
+        </div>
+
+        <div class="quantum-icon" style="top: 60px; left: 180px;" ondblclick="openQuantumWindow('simulator')">
+            <div class="icon-symbol">⚛️</div>
+            <div class="icon-text">Quantum<br>Simulator</div>
+        </div>
+
+        <div class="quantum-icon" style="top: 60px; left: 300px;" ondblclick="openQuantumWindow('algorithms')">
+            <div class="icon-symbol">🧮</div>
+            <div class="icon-text">Algorithms</div>
+        </div>
+
+        <div class="quantum-icon" style="top: 200px; left: 60px;" ondblclick="openQuantumWindow('visualizer')">
+            <div class="icon-symbol">🌀</div>
+            <div class="icon-text">State<br>Visualizer</div>
+        </div>
+
+        <div class="quantum-icon" style="top: 200px; left: 180px;" ondblclick="openQuantumWindow('entanglement')">
+            <div class="icon-symbol">🔗</div>
+            <div class="icon-text">Entangle<br>Lab</div>
+        </div>
+
+        <div class="quantum-icon" style="top: 200px; left: 300px;" ondblclick="openQuantumWindow('editor')">
+            <div class="icon-symbol">💻</div>
+            <div class="icon-text">Quantum<br>Editor</div>
+        </div>
+
+        <!-- Circuit Builder Window -->
+        <div id="circuit" class="quantum-window" style="left: 450px; top: 80px; width: 850px; height: 600px;">
+            <div class="window-header">
+                <div class="window-title">
+                    <span>🔮</span>
+                    <span>Quantum Circuit Builder</span>
+                </div>
+                <div class="window-buttons">
+                    <button class="win-btn btn-min" onclick="minimizeWindow('circuit')">−</button>
+                    <button class="win-btn btn-max" onclick="maximizeWindow('circuit')">□</button>
+                    <button class="win-btn btn-close" onclick="closeWindow('circuit')">×</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="circuit-builder">
+                    <div class="gate-palette">
+                        <h3 style="margin-bottom: 15px;">Gates</h3>
+                        <div class="quantum-gate">H - Hadamard</div>
+                        <div class="quantum-gate">X - Pauli-X</div>
+                        <div class="quantum-gate">Y - Pauli-Y</div>
+                        <div class="quantum-gate">Z - Pauli-Z</div>
+                        <div class="quantum-gate">CNOT</div>
+                        <div class="quantum-gate">T - Phase</div>
+                        <div class="quantum-gate">S - Phase</div>
+                        <div class="quantum-gate">SWAP</div>
+                    </div>
+                    <div class="circuit-canvas">
+                        <div class="qubit-wire">
+                            <span class="qubit-label">|0⟩</span>
+                        </div>
+                        <div class="qubit-wire">
+                            <span class="qubit-label">|0⟩</span>
+                        </div>
+                        <div class="qubit-wire">
+                            <span class="qubit-label">|0⟩</span>
+                        </div>
+                        <div style="margin-top: 30px;">
+                            <button class="quantum-button" onclick="runCircuit()">▶️ Run Circuit</button>
+                            <button class="quantum-button" onclick="clearCircuit()">🗑️ Clear</button>
+                            <button class="quantum-button" onclick="exportCircuit()">💾 Export</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quantum Simulator Window -->
+        <div id="simulator" class="quantum-window" style="left: 400px; top: 100px; width: 750px; height: 650px;">
+            <div class="window-header">
+                <div class="window-title">
+                    <span>⚛️</span>
+                    <span>Quantum Simulator Console</span>
+                </div>
+                <div class="window-buttons">
+                    <button class="win-btn btn-min" onclick="minimizeWindow('simulator')">−</button>
+                    <button class="win-btn btn-max" onclick="maximizeWindow('simulator')">□</button>
+                    <button class="win-btn btn-close" onclick="closeWindow('simulator')">×</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="simulator-console" id="simConsole">
+                    <div class="console-line">QuantumOS Simulator v3.0 - Ready</div>
+                    <div class="console-line">Qubits: 8 | Gates: 256 | Depth: 32</div>
+                    <div class="console-line"></div>
+                    <div class="console-line">quantum@superposition:~$</div>
+                </div>
+                <div class="console-input">
+                    <span class="console-prompt">quantum@superposition:~$</span>
+                    <input type="text" class="console-field" id="simInput" onkeypress="handleSimulator(event)" placeholder="Enter quantum command...">
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="quantum-button" onclick="initializeQubits()">Initialize Qubits</button>
+                    <button class="quantum-button" onclick="measureState()">Measure State</button>
+                    <button class="quantum-button" onclick="resetSimulator()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algorithms Window -->
+        <div id="algorithms" class="quantum-window" style="left: 500px; top: 90px; width: 700px; height: 600px;">
+            <div class="window-header">
+                <div class="window-title">
+                    <span>🧮</span>
+                    <span>Quantum Algorithms Library</span>
+                </div>
+                <div class="window-buttons">
+                    <button class="win-btn btn-min" onclick="minimizeWindow('algorithms')">−</button>
+                    <button class="win-btn btn-max" onclick="maximizeWindow('algorithms')">□</button>
+                    <button class="win-btn btn-close" onclick="closeWindow('algorithms')">×</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="algorithm-list">
+                    <div class="algorithm-item" onclick="runAlgorithm('grover')">
+                        <div class="algorithm-title">🔍 Grover's Search Algorithm</div>
+                        <div class="algorithm-desc">Quantum search algorithm for unstructured databases. Provides quadratic speedup over classical search.</div>
+                    </div>
+                    <div class="algorithm-item" onclick="runAlgorithm('shor')">
+                        <div class="algorithm-title">🔐 Shor's Factorization</div>
+                        <div class="algorithm-desc">Integer factorization algorithm with exponential speedup. Threatens RSA encryption.</div>
+                    </div>
+                    <div class="algorithm-item" onclick="runAlgorithm('qft')">
+                        <div class="algorithm-title">🌊 Quantum Fourier Transform</div>
+                        <div class="algorithm-desc">Quantum version of discrete Fourier transform. Core component of many quantum algorithms.</div>
+                    </div>
+                    <div class="algorithm-item" onclick="runAlgorithm('vqe')">
+                        <div class="algorithm-title">⚗️ Variational Quantum Eigensolver</div>
+                        <div class="algorithm-desc">Hybrid quantum-classical algorithm for finding ground state energies of molecules.</div>
+                    </div>
+                    <div class="algorithm-item" onclick="runAlgorithm('qaoa')">
+                        <div class="algorithm-title">🎯 QAOA - Quantum Optimization</div>
+                        <div class="algorithm-desc">Quantum approximate optimization algorithm for combinatorial optimization problems.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Visualizer Window -->
+        <div id="visualizer" class="quantum-window" style="left: 420px; top: 110px; width: 750px; height: 650px;">
+            <div class="window-header">
+                <div class="window-title">
+                    <span>🌀</span>
+                    <span>Quantum State Visualizer</span>
+                </div>
+                <div class="window-buttons">
+                    <button class="win-btn btn-min" onclick="minimizeWindow('visualizer')">−</button>
+                    <button class="win-btn btn-max" onclick="maximizeWindow('visualizer')">□</button>
+                    <button class="win-btn btn-close" onclick="closeWindow('visualizer')">×</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <h3>Bloch Sphere Representation</h3>
+                <div class="bloch-sphere">
+                    <div class="bloch-vector"></div>
+                </div>
+
+                <h3 style="margin-top: 30px;">State Vector</h3>
+                <div class="state-visualizer">
+                    <div class="state-card">
+                        <div>|00⟩</div>
+                        <div class="state-ket">0.50</div>
+                        <div class="state-prob">25.0%</div>
+                    </div>
+                    <div class="state-card">
+                        <div>|01⟩</div>
+                        <div class="state-ket">0.50</div>
+                        <div class="state-prob">25.0%</div>
+                    </div>
+                    <div class="state-card">
+                        <div>|10⟩</div>
+                        <div class="state-ket">0.50</div>
+                        <div class="state-prob">25.0%</div>
+                    </div>
+                    <div class="state-card">
+                        <div>|11⟩</div>
+                        <div class="state-ket">0.50</div>
+                        <div class="state-prob">25.0%</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button class="quantum-button" onclick="applyHadamard()">H Gate</button>
+                    <button class="quantum-button" onclick="applyPauliX()">X Gate</button>
+                    <button class="quantum-button" onclick="randomizeState()">Randomize</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entanglement Lab Window -->
+        <div id="entanglement" class="quantum-window" style="left: 480px; top: 120px; width: 700px; height: 550px;">
+            <div class="window-header">
+                <div class="window-title">
+                    <span>🔗</span>
+                    <span>Entanglement Laboratory</span>
+                </div>
+                <div class="window-buttons">
+                    <button class="win-btn btn-min" onclick="minimizeWindow('entanglement')">−</button>
+                    <button class="win-btn btn-max" onclick="maximizeWindow('entanglement')">□</button>
+                    <button class="win-btn btn-close" onclick="closeWindow('entanglement')">×</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <h3>Entangled Qubit Pair</h3>
+                <div class="entangled-pair">
+                    <div class="entangled-qubit">A</div>
+                    <div class="entanglement-line"></div>
+                    <div class="entangled-qubit">B</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-label">Entanglement</div>
+                        <div class="metric-value" id="entangleValue">100%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Coherence Time</div>
+                        <div class="metric-value" id="coherenceValue">1.2ms</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Fidelity</div>
+                        <div class="metric-value" id="fidelityValue">99.8%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Bell State</div>
+                        <div class="metric-value" id="bellState">|Φ+⟩</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button class="quantum-button" onclick="createBellPair()">Create Bell Pair</button>
+                    <button class="quantum-button" onclick="teleportState()">Teleport State</button>
+                    <button class="quantum-button" onclick="breakEntanglement()">Break Entanglement</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quantum Code Editor Window -->
+        <div id="editor" class="quantum-window" style="left: 350px; top: 70px; width: 800px; height: 650px;">
+            <div class="window-header">
+                <div class="window-title">
+                    <span>💻</span>
+                    <span>Quantum Code Editor - circuit.qasm</span>
+                </div>
+                <div class="window-buttons">
+                    <button class="win-btn btn-min" onclick="minimizeWindow('editor')">−</button>
+                    <button class="win-btn btn-max" onclick="maximizeWindow('editor')">□</button>
+                    <button class="win-btn btn-close" onclick="closeWindow('editor')">×</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="code-quantum">
+<span class="comment">// Quantum Circuit in QASM</span>
+<span class="keyword">OPENQASM</span> <span class="number">2.0</span>;
+<span class="keyword">include</span> <span class="string">"qelib1.inc"</span>;
+
+<span class="keyword">qreg</span> <span class="function">q</span>[<span class="number">3</span>];
+<span class="keyword">creg</span> <span class="function">c</span>[<span class="number">3</span>];
+
+<span class="comment">// Create superposition</span>
+<span class="function">h</span> q[<span class="number">0</span>];
+<span class="function">h</span> q[<span class="number">1</span>];
+
+<span class="comment">// Entangle qubits</span>
+<span class="function">cx</span> q[<span class="number">0</span>], q[<span class="number">1</span>];
+<span class="function">cx</span> q[<span class="number">1</span>], q[<span class="number">2</span>];
+
+<span class="comment">// Apply phase gate</span>
+<span class="function">t</span> q[<span class="number">0</span>];
+
+<span class="comment">// Measure all qubits</span>
+<span class="function">measure</span> q -> c;
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="quantum-button" onclick="executeCode()">▶️ Execute</button>
+                    <button class="quantum-button" onclick="saveCode()">💾 Save</button>
+                    <button class="quantum-button" onclick="exportQASM()">📤 Export QASM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quantum Bar -->
+    <div id="quantum-bar">
+        <button id="quantum-menu-btn" onclick="toggleQuantumMenu()">⚛️ QUANTUM</button>
+        <div id="barApps"></div>
+        <div id="system-time">00:00:00</div>
+    </div>
+
+    <!-- Quantum Menu -->
+    <div id="quantum-menu">
+        <div class="menu-top">QuantumOS v3.0</div>
+        <div class="menu-apps">
+            <div class="menu-app" onclick="openQuantumWindow('circuit'); toggleQuantumMenu()">
+                <span>🔮</span>
+                <span>Circuit Builder</span>
+            </div>
+            <div class="menu-app" onclick="openQuantumWindow('simulator'); toggleQuantumMenu()">
+                <span>⚛️</span>
+                <span>Quantum Simulator</span>
+            </div>
+            <div class="menu-app" onclick="openQuantumWindow('algorithms'); toggleQuantumMenu()">
+                <span>🧮</span>
+                <span>Algorithms</span>
+            </div>
+            <div class="menu-app" onclick="openQuantumWindow('visualizer'); toggleQuantumMenu()">
+                <span>🌀</span>
+                <span>State Visualizer</span>
+            </div>
+            <div class="menu-app" onclick="openQuantumWindow('entanglement'); toggleQuantumMenu()">
+                <span>🔗</span>
+                <span>Entanglement Lab</span>
+            </div>
+            <div class="menu-app" onclick="openQuantumWindow('editor'); toggleQuantumMenu()">
+                <span>💻</span>
+                <span>Code Editor</span>
+            </div>
+            <div class="menu-app" onclick="showNotification('System', 'Shutting down quantum system...'); setTimeout(() => location.reload(), 1500)">
+                <span>🔌</span>
+                <span>Shutdown</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quantum Field Animation
+        const field = document.getElementById('quantum-field');
+        for (let i = 0; i < 40; i++) {
+            const qubit = document.createElement('div');
+            qubit.className = 'qubit';
+            qubit.style.left = Math.random() * 100 + '%';
+            qubit.style.top = Math.random() * 100 + '%';
+            qubit.style.animationDelay = Math.random() * 2 + 's';
+            field.appendChild(qubit);
+        }
+
+        // Window Management
+        let activeWindows = [];
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openQuantumWindow(winId) {
+            const win = document.getElementById(winId);
+            if (!win) return;
+
+            win.classList.add('active');
+            if (!activeWindows.includes(winId)) {
+                activeWindows.push(winId);
+                updateBar();
+            }
+
+            showNotification('Window Opened', `${winId.charAt(0).toUpperCase() + winId.slice(1)} is now active`);
+        }
+
+        function closeWindow(winId) {
+            const win = document.getElementById(winId);
+            if (!win) return;
+
+            win.classList.remove('active');
+            activeWindows = activeWindows.filter(id => id !== winId);
+            updateBar();
+        }
+
+        function minimizeWindow(winId) {
+            closeWindow(winId);
+        }
+
+        function maximizeWindow(winId) {
+            const win = document.getElementById(winId);
+            if (!win) return;
+
+            if (win.style.width === '100vw') {
+                win.style.width = '750px';
+                win.style.height = '600px';
+                win.style.left = '400px';
+                win.style.top = '100px';
+            } else {
+                win.style.width = '100vw';
+                win.style.height = 'calc(100vh - 75px)';
+                win.style.left = '0';
+                win.style.top = '0';
+            }
+        }
+
+        function updateBar() {
+            const barApps = document.getElementById('barApps');
+            barApps.innerHTML = '';
+
+            activeWindows.forEach(id => {
+                const app = document.createElement('div');
+                app.className = 'bar-app active';
+                app.textContent = id.charAt(0).toUpperCase() + id.slice(1);
+                app.onclick = () => openQuantumWindow(id);
+                barApps.appendChild(app);
+            });
+        }
+
+        // Drag functionality
+        document.querySelectorAll('.window-header').forEach(header => {
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.window-buttons')) return;
+
+                draggedWindow = this.parentElement;
+                const rect = draggedWindow.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (draggedWindow) {
+                draggedWindow.style.left = (e.clientX - dragOffset.x) + 'px';
+                draggedWindow.style.top = (e.clientY - dragOffset.y) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            draggedWindow = null;
+        });
+
+        // Quantum Menu
+        function toggleQuantumMenu() {
+            const menu = document.getElementById('quantum-menu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('quantum-menu');
+            const btn = document.getElementById('quantum-menu-btn');
+            if (!menu.contains(e.target) && e.target !== btn) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Simulator Functions
+        function handleSimulator(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('simInput');
+                const console = document.getElementById('simConsole');
+                const command = input.value.trim();
+
+                const line = document.createElement('div');
+                line.className = 'console-line';
+                line.textContent = 'quantum@superposition:~$ ' + command;
+                console.appendChild(line);
+
+                let response = '';
+                if (command === 'help') {
+                    response = 'Available commands:\n  init - Initialize quantum system\n  run - Execute circuit\n  measure - Measure qubits\n  state - Show quantum state\n  clear - Clear console';
+                } else if (command === 'init') {
+                    response = 'Initializing quantum system...\nQubits initialized: 8\nCircuit depth: 32\nBackend: Aer simulator';
+                } else if (command === 'run') {
+                    response = 'Running quantum circuit...\nGates applied: 24\nExecution time: 0.023s\nStatus: Success';
+                } else if (command === 'measure') {
+                    response = 'Measuring quantum state...\nResult: |010101⟩\nProbability: 0.125 (12.5%)';
+                } else if (command === 'state') {
+                    response = 'Current quantum state:\n|ψ⟩ = 0.707|000⟩ + 0.707|111⟩\nEntanglement: Yes\nPhase: 0°';
+                } else if (command === 'clear') {
+                    console.innerHTML = '<div class="console-line">quantum@superposition:~$</div>';
+                    input.value = '';
+                    return;
+                } else if (command !== '') {
+                    response = `Command not found: ${command}`;
+                }
+
+                if (response) {
+                    const resp = document.createElement('div');
+                    resp.className = 'console-line';
+                    resp.textContent = response;
+                    console.appendChild(resp);
+                }
+
+                const prompt = document.createElement('div');
+                prompt.className = 'console-line';
+                prompt.textContent = 'quantum@superposition:~$';
+                console.appendChild(prompt);
+
+                input.value = '';
+                console.scrollTop = console.scrollHeight;
+            }
+        }
+
+        // Circuit Functions
+        function runCircuit() {
+            showNotification('Circuit Executing', 'Quantum circuit is running...');
+            setTimeout(() => {
+                showNotification('Circuit Complete', 'Result: |101⟩ with 87.3% probability');
+            }, 2000);
+        }
+
+        function clearCircuit() {
+            showNotification('Circuit Cleared', 'All gates removed from circuit');
+        }
+
+        function exportCircuit() {
+            showNotification('Exporting', 'Circuit exported as QASM');
+        }
+
+        // Algorithm Functions
+        function runAlgorithm(algo) {
+            const names = {
+                'grover': "Grover's Search",
+                'shor': "Shor's Algorithm",
+                'qft': 'Quantum Fourier Transform',
+                'vqe': 'VQE',
+                'qaoa': 'QAOA'
+            };
+            showNotification('Algorithm Running', `${names[algo]} is executing...`);
+        }
+
+        // Simulator Functions
+        function initializeQubits() {
+            showNotification('Qubits Initialized', 'All qubits set to |0⟩ state');
+        }
+
+        function measureState() {
+            const states = ['|000⟩', '|001⟩', '|010⟩', '|011⟩', '|100⟩', '|101⟩', '|110⟩', '|111⟩'];
+            const result = states[Math.floor(Math.random() * states.length)];
+            showNotification('Measurement', `Collapsed to ${result}`);
+        }
+
+        function resetSimulator() {
+            showNotification('Reset Complete', 'Simulator reset to initial state');
+        }
+
+        // Visualizer Functions
+        function applyHadamard() {
+            showNotification('Gate Applied', 'Hadamard gate applied - superposition created');
+        }
+
+        function applyPauliX() {
+            showNotification('Gate Applied', 'Pauli-X gate applied - state flipped');
+        }
+
+        function randomizeState() {
+            showNotification('State Randomized', 'Random quantum state generated');
+        }
+
+        // Entanglement Functions
+        function createBellPair() {
+            showNotification('Entanglement Created', 'Bell pair |Φ+⟩ generated');
+        }
+
+        function teleportState() {
+            showNotification('Teleportation', 'Quantum state teleported successfully');
+        }
+
+        function breakEntanglement() {
+            showNotification('Entanglement Broken', 'Qubits are now separable');
+        }
+
+        // Editor Functions
+        function executeCode() {
+            showNotification('Code Executing', 'QASM code is running...');
+            setTimeout(() => {
+                showNotification('Execution Complete', 'Circuit executed successfully');
+            }, 1500);
+        }
+
+        function saveCode() {
+            showNotification('File Saved', 'circuit.qasm saved successfully');
+        }
+
+        function exportQASM() {
+            showNotification('Export Complete', 'QASM file exported');
+        }
+
+        // Notifications
+        let notifCount = 0;
+        function showNotification(title, message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification-quantum';
+            notif.style.top = (20 + notifCount * 100) + 'px';
+            notif.innerHTML = `
+                <div class="notif-header">${title}</div>
+                <div class="notif-body">${message}</div>
+            `;
+            document.body.appendChild(notif);
+
+            notifCount++;
+
+            setTimeout(() => {
+                notif.remove();
+                notifCount--;
+            }, 3000);
+        }
+
+        // Update metrics
+        setInterval(() => {
+            document.getElementById('entangleValue').textContent = (95 + Math.random() * 5).toFixed(1) + '%';
+            document.getElementById('coherenceValue').textContent = (1.0 + Math.random() * 0.5).toFixed(2) + 'ms';
+            document.getElementById('fidelityValue').textContent = (99 + Math.random()).toFixed(1) + '%';
+        }, 2000);
+
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            const time = now.toTimeString().split(' ')[0];
+            document.getElementById('system-time').textContent = time;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Welcome
+        setTimeout(() => {
+            showNotification('Welcome to QuantumOS', 'Quantum computing environment ready');
+        }, 1000);
+    </script>
+</body>
+</html>
