@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Desktop Collection - IGotVD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 4em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+
+        .subtitle {
+            font-size: 1.5em;
+            color: #b8b8d1;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #888;
+            font-size: 1.1em;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .desktop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .desktop-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .desktop-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .desktop-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .desktop-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            display: block;
+            filter: drop-shadow(0 0 20px currentColor);
+            transition: all 0.4s;
+        }
+
+        .desktop-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .card-description {
+            color: #b8b8d1;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .card-features li {
+            padding: 6px 0;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .card-features li::before {
+            content: '✓ ';
+            color: #4ade80;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .card-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Theme-specific colors */
+        .card-cyber {
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .card-cyber:hover {
+            box-shadow: 0 20px 60px rgba(0, 255, 65, 0.3);
+        }
+
+        .card-cyber .card-icon {
+            color: #00ff41;
+        }
+
+        .card-neural {
+            border-color: rgba(179, 102, 255, 0.3);
+        }
+
+        .card-neural:hover {
+            box-shadow: 0 20px 60px rgba(179, 102, 255, 0.3);
+        }
+
+        .card-neural .card-icon {
+            color: #b366ff;
+        }
+
+        .card-quantum {
+            border-color: rgba(0, 255, 255, 0.3);
+        }
+
+        .card-quantum:hover {
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.3);
+        }
+
+        .card-quantum .card-icon {
+            color: #00ffff;
+        }
+
+        .card-retro {
+            border-color: rgba(255, 0, 255, 0.3);
+        }
+
+        .card-retro:hover {
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.3);
+        }
+
+        .card-retro .card-icon {
+            color: #ff00ff;
+        }
+
+        .card-konomi {
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .card-konomi:hover {
+            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.3);
+        }
+
+        .card-konomi .card-icon {
+            color: #00ff88;
+        }
+
+        .card-ai {
+            border-color: rgba(0, 255, 255, 0.3);
+        }
+
+        .card-ai:hover {
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.3);
+        }
+
+        .card-ai .card-icon {
+            color: #0ff;
+        }
+
+        .card-snt {
+            border-color: rgba(179, 102, 255, 0.3);
+        }
+
+        .card-snt:hover {
+            box-shadow: 0 20px 60px rgba(179, 102, 255, 0.3);
+        }
+
+        .card-snt .card-icon {
+            color: #b366ff;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 40px 20px;
+            color: #666;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .add-more {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 50px 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .add-more:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .add-more-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .add-more-text {
+            color: #888;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .subtitle {
+                font-size: 1.2em;
+            }
+
+            .desktop-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Floating particles background */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖥️ Virtual Desktop Collection</h1>
+            <div class="subtitle">Browser-Based Operating Systems & Workspaces</div>
+            <p class="description">
+                Explore a collection of fully functional virtual desktops, each with unique themes,
+                applications, and experiences. All running directly in your browser.
+            </p>
+        </header>
+
+        <div class="desktop-grid" id="desktopGrid">
+            <!-- Desktop cards will be generated here -->
+        </div>
+
+        <footer>
+            <p>Made with ❤️ for virtual desktop experiences</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                Click "Launch" to open in the same tab, or "New Tab" to open in a new window
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Desktop configurations
+        const desktops = [
+            {
+                name: 'CyberOS Desktop',
+                file: 'cyberOS_desktop.html',
+                icon: '🖥️',
+                theme: 'cyber',
+                description: 'A cyberpunk-themed operating system with Matrix-style aesthetics and neon green terminals.',
+                features: [
+                    'Working terminal with commands',
+                    'File manager with grid view',
+                    'System monitor with live metrics',
+                    'Code editor & browser',
+                    'Music player & chat app'
+                ]
+            },
+            {
+                name: 'NeuroNet Workspace',
+                file: 'neuronet_workspace.html',
+                icon: '🧠',
+                theme: 'neural',
+                description: 'Neural network and AI/ML development environment with purple neural aesthetics.',
+                features: [
+                    'Neural network visualizer',
+                    'Model training center',
+                    'Dataset manager',
+                    'AI dashboard with metrics',
+                    'Model library browser'
+                ]
+            },
+            {
+                name: 'Quantum Desktop',
+                file: 'quantum_desktop.html',
+                icon: '⚛️',
+                theme: 'quantum',
+                description: 'Quantum computing development environment with circuit builders and state visualizers.',
+                features: [
+                    'Quantum circuit builder',
+                    'State visualizer with Bloch sphere',
+                    'Quantum simulator console',
+                    'Algorithm library (Grover, Shor)',
+                    'QASM code editor'
+                ]
+            },
+            {
+                name: 'RetroWave OS',
+                file: 'retrowave_desktop.html',
+                icon: '🌆',
+                theme: 'retro',
+                description: '1980s vaporwave/synthwave aesthetic with animated sunset grid and neon effects.',
+                features: [
+                    'Animated 3D grid background',
+                    'MS-DOS style terminal',
+                    'Synthwave music player',
+                    'Retro arcade games',
+                    'Pixel art paint tool'
+                ]
+            },
+            {
+                name: 'Konomi Cube System',
+                file: 'Konomi_Cube_Live_Enhanced.html',
+                icon: '🧬',
+                theme: 'konomi',
+                description: 'Enhanced 3D cube system with vertex agents, neural networks, and hash processing.',
+                features: [
+                    '3D rotating cube visualization',
+                    'Vertex agent processors',
+                    'Layer frame architecture',
+                    'Neural link networks',
+                    'Real-time hash compression'
+                ]
+            },
+            {
+                name: 'AI-OS Φ',
+                file: 'AI-OS_Phi_Entropy_Balanced.html',
+                icon: '⚖️',
+                theme: 'ai',
+                description: 'Entropy-balanced neural core with agent forest ecosystem and golden ratio equilibrium.',
+                features: [
+                    'Multi-generational agent forest',
+                    'Entropy governance system',
+                    'Phase space oscillator',
+                    'Evolutionary dynamics',
+                    'Timeline management'
+                ]
+            },
+            {
+                name: 'SnT Compiler',
+                file: 'SnT_Compiler_Emoji_Cube.html',
+                icon: '🔮',
+                theme: 'snt',
+                description: 'Emoji³ cube-based compiler system with quantum operations and photonic backends.',
+                features: [
+                    '10-layer compilation cube',
+                    'Quantum & temporal operations',
+                    'Multi-target code generation',
+                    'Real-time performance metrics',
+                    'Interactive emoji operations'
+                ]
+            }
+        ];
+
+        // Generate desktop cards
+        function generateCards() {
+            const grid = document.getElementById('desktopGrid');
+
+            desktops.forEach(desktop => {
+                const card = document.createElement('div');
+                card.className = `desktop-card card-${desktop.theme}`;
+
+                const features = desktop.features.map(f => `<li>${f}</li>`).join('');
+
+                card.innerHTML = `
+                    <span class="card-icon">${desktop.icon}</span>
+                    <div class="card-title">${desktop.name}</div>
+                    <div class="card-description">${desktop.description}</div>
+                    <ul class="card-features">
+                        ${features}
+                    </ul>
+                    <div class="card-buttons">
+                        <a href="${desktop.file}" class="btn btn-primary">🚀 Launch</a>
+                        <a href="${desktop.file}" target="_blank" class="btn btn-secondary">🔗 New Tab</a>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Add "Add More" card
+            const addCard = document.createElement('div');
+            addCard.className = 'desktop-card add-more';
+            addCard.innerHTML = `
+                <div class="add-more-icon">➕</div>
+                <div class="add-more-text">
+                    <strong>Add More Desktops</strong><br>
+                    <span style="font-size: 0.9em; color: #666;">
+                        Create new HTML files in the root directory<br>
+                        and add them to the desktops array in index.html
+                    </span>
+                </div>
+            `;
+            grid.appendChild(addCard);
+        }
+
+        // Create floating particles
+        function createParticles() {
+            const particleCount = 30;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(particle);
+            }
+        }
+
+        // Initialize
+        generateCards();
+        createParticles();
+
+        // Add card click animations
+        document.querySelectorAll('.desktop-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Only trigger if clicking the card itself, not the buttons
+                if (e.target === this || e.target.classList.contains('card-icon')) {
+                    const primaryBtn = this.querySelector('.btn-primary');
+                    if (primaryBtn) {
+                        window.location.href = primaryBtn.href;
+                    }
+                }
+            });
+        });
+
+        // Log available desktops to console for easy reference
+        console.log('Available Virtual Desktops:');
+        desktops.forEach((d, i) => {
+            console.log(`${i + 1}. ${d.name} - ${d.file}`);
+        });
+    </script>
+</body>
+</html>
