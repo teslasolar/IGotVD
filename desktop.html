@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGotVD - Virtual Desktop Collection</title>
+    <meta name="description" content="Modular virtual desktop system with multiple themes and environments">
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="src/css/core.css">
+    <link rel="stylesheet" href="src/css/components.css">
+</head>
+<body>
+    <div class="loading" id="loading">Loading Virtual Desktop</div>
+
+    <div class="desktop" id="desktop" style="display: none;">
+        <!-- Background layer -->
+        <div class="background-layer"></div>
+
+        <!-- Windows and content will be injected here -->
+    </div>
+
+    <!-- Desktop Switcher (hidden by default, show with Ctrl+Shift+D) -->
+    <div id="desktop-switcher" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: rgba(10, 14, 26, 0.98); border: 3px solid var(--primary); border-radius: 15px; padding: 30px; box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); min-width: 600px;">
+        <h2 style="color: var(--primary); margin-bottom: 20px; text-align: center; font-size: 1.8em;">Select Desktop Environment</h2>
+        <div id="desktop-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+            <!-- Desktop options will be populated here -->
+        </div>
+        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <button class="btn btn-secondary" onclick="closeSwitcher()" style="padding: 10px 30px;">Cancel (ESC)</button>
+        </div>
+    </div>
+
+    <!-- Core JavaScript -->
+    <script src="src/js/core.js"></script>
+
+    <!-- Desktop Loader -->
+    <script>
+        // Available desktops configuration
+        const DESKTOPS = {
+            cyber: {
+                name: 'CyberOS',
+                icon: '🖥️',
+                description: 'Matrix-style cyberpunk terminal',
+                module: 'src/modules/cyber.js',
+                class: 'CyberDesktop'
+            },
+            neural: {
+                name: 'NeuroNet',
+                icon: '🧠',
+                description: 'AI/ML development environment',
+                module: 'src/modules/neural.js',
+                class: 'NeuralDesktop',
+                status: 'coming-soon'
+            },
+            quantum: {
+                name: 'QuantumOS',
+                icon: '⚛️',
+                description: 'Quantum computing interface',
+                module: 'src/modules/quantum.js',
+                class: 'QuantumDesktop',
+                status: 'coming-soon'
+            },
+            retro: {
+                name: 'RetroWave',
+                icon: '🌆',
+                description: '1980s vaporwave aesthetic',
+                module: 'src/modules/retro.js',
+                class: 'RetroDesktop',
+                status: 'coming-soon'
+            },
+            hacker: {
+                name: 'Hacker Terminal',
+                icon: '👾',
+                description: 'Elite security workstation',
+                module: 'src/modules/hacker.js',
+                class: 'HackerDesktop',
+                status: 'coming-soon'
+            },
+            biotech: {
+                name: 'BioTech Lab',
+                icon: '🧬',
+                description: 'Genetic computing interface',
+                module: 'src/modules/biotech.js',
+                class: 'BiotechDesktop',
+                status: 'coming-soon'
+            },
+            space: {
+                name: 'Space Station',
+                icon: '🛰️',
+                description: 'Orbital command interface',
+                module: 'src/modules/space.js',
+                class: 'SpaceDesktop',
+                status: 'coming-soon'
+            },
+            city: {
+                name: 'Neon City',
+                icon: '🌆',
+                description: 'Urban management system',
+                module: 'src/modules/city.js',
+                class: 'CityDesktop',
+                status: 'coming-soon'
+            },
+            ocean: {
+                name: 'Ocean Lab',
+                icon: '🌊',
+                description: 'Deep sea research station',
+                module: 'src/modules/ocean.js',
+                class: 'OceanDesktop',
+                status: 'coming-soon'
+            },
+            mystic: {
+                name: 'Mystic Arcane',
+                icon: '✨',
+                description: 'Fantasy wizard workstation',
+                module: 'src/modules/mystic.js',
+                class: 'MysticDesktop',
+                status: 'coming-soon'
+            }
+        };
+
+        let currentDesktop = null;
+
+        // Get desktop mode from URL or localStorage
+        function getDesktopMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('mode') || localStorage.getItem('desktop-mode') || 'cyber';
+        }
+
+        // Set desktop mode
+        function setDesktopMode(mode) {
+            localStorage.setItem('desktop-mode', mode);
+            const url = new URL(window.location);
+            url.searchParams.set('mode', mode);
+            window.history.pushState({}, '', url);
+        }
+
+        // Load desktop module
+        async function loadDesktop(mode) {
+            const config = DESKTOPS[mode];
+            if (!config) {
+                showError(`Desktop mode '${mode}' not found`);
+                return;
+            }
+
+            if (config.status === 'coming-soon') {
+                showError(`${config.name} is coming soon! For now, using CyberOS.`);
+                mode = 'cyber';
+                config = DESKTOPS.cyber;
+            }
+
+            try {
+                // Cleanup previous desktop
+                if (currentDesktop) {
+                    currentDesktop.cleanup();
+                }
+
+                // Load module
+                await loadScript(config.module);
+
+                // Instantiate desktop
+                const DesktopClass = window[config.class];
+                if (!DesktopClass) {
+                    throw new Error(`Desktop class ${config.class} not found`);
+                }
+
+                currentDesktop = new DesktopClass();
+                await currentDesktop.init();
+
+                // Show desktop
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('desktop').style.display = 'flex';
+
+                // Save mode
+                setDesktopMode(mode);
+
+                console.log(`✅ Loaded desktop: ${config.name}`);
+            } catch (error) {
+                console.error('Failed to load desktop:', error);
+                showError(`Failed to load ${config.name}: ${error.message}`);
+            }
+        }
+
+        // Load script dynamically
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+
+        // Show error
+        function showError(message) {
+            const loading = document.getElementById('loading');
+            loading.innerHTML = `
+                <div class="error-message" style="max-width: 600px; margin: 0 auto;">
+                    <h2 style="margin-bottom: 15px;">⚠️ Error</h2>
+                    <p>${message}</p>
+                    <button class="btn" onclick="location.reload()" style="margin-top: 20px;">Reload Page</button>
+                </div>
+            `;
+        }
+
+        // Desktop switcher
+        function showSwitcher() {
+            const switcher = document.getElementById('desktop-switcher');
+            const options = document.getElementById('desktop-options');
+
+            // Populate options
+            options.innerHTML = '';
+            Object.entries(DESKTOPS).forEach(([key, config]) => {
+                const btn = document.createElement('div');
+                btn.className = 'card';
+                btn.style.cursor = 'pointer';
+                btn.style.textAlign = 'center';
+                btn.style.padding = '20px';
+
+                if (config.status === 'coming-soon') {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                }
+
+                btn.innerHTML = `
+                    <div style="font-size: 3em; margin-bottom: 10px;">${config.icon}</div>
+                    <div style="font-weight: bold; margin-bottom: 5px; color: var(--primary);">${config.name}</div>
+                    <div style="font-size: 0.85em; color: var(--text);">${config.description}</div>
+                    ${config.status === 'coming-soon' ? '<div style="margin-top: 10px;"><span class="badge badge-warning">Coming Soon</span></div>' : ''}
+                `;
+
+                if (config.status !== 'coming-soon') {
+                    btn.onclick = () => {
+                        closeSwitcher();
+                        loadDesktop(key);
+                    };
+                }
+
+                options.appendChild(btn);
+            });
+
+            switcher.style.display = 'block';
+        }
+
+        function closeSwitcher() {
+            document.getElementById('desktop-switcher').style.display = 'none';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Shift+D - Show desktop switcher
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                showSwitcher();
+            }
+
+            // ESC - Close switcher
+            if (e.key === 'Escape') {
+                closeSwitcher();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const mode = getDesktopMode();
+            loadDesktop(mode);
+        });
+
+        // Export functions
+        window.showSwitcher = showSwitcher;
+        window.closeSwitcher = closeSwitcher;
+        window.loadDesktop = loadDesktop;
+    </script>
+</body>
+</html>
