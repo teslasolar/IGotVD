@@ -1,0 +1,83 @@
+{
+  "desktops": [
+    {
+      "name": "BioTech Lab OS - Genetic Computing Interface",
+      "file": "biotech_lab.html",
+      "icon": "⚛️",
+      "theme": "quantum",
+      "description": "BioTech Lab OS - Genetic Computing Interface - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "CyberOS v7.2 - Virtual Desktop",
+      "file": "cyberOS_desktop.html",
+      "icon": "🖥️",
+      "theme": "cyber",
+      "description": "CyberOS v7.2 - Virtual Desktop - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "H4CK3R T3RM1N4L - Elite Access System",
+      "file": "hacker_terminal.html",
+      "icon": "👾",
+      "theme": "hacker",
+      "description": "H4CK3R T3RM1N4L - Elite Access System - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "NeuroNet Workspace - Neural Desktop v4.1",
+      "file": "neuronet_workspace.html",
+      "icon": "🧠",
+      "theme": "neural",
+      "description": "NeuroNet Workspace - Neural Desktop v4.1 - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "QuantumOS - Superposition Desktop v3.0",
+      "file": "quantum_desktop.html",
+      "icon": "⚛️",
+      "theme": "quantum",
+      "description": "QuantumOS - Superposition Desktop v3.0 - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "RetroWave OS - Virtual Desktop v2.0",
+      "file": "retrowave_desktop.html",
+      "icon": "🖥️",
+      "theme": "cyber",
+      "description": "RetroWave OS - Virtual Desktop v2.0 - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    }
+  ],
+  "generated": "2025-11-11T19:12:48.339Z"
+}

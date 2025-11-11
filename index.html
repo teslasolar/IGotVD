@@ -367,125 +367,13 @@
     </div>
 
     <script>
-        // Desktop configurations
-        const desktops = [
-            {
-                name: 'CyberOS Desktop',
-                file: 'cyberOS_desktop.html',
-                icon: '🖥️',
-                theme: 'cyber',
-                description: 'A cyberpunk-themed operating system with Matrix-style aesthetics and neon green terminals.',
-                features: [
-                    'Working terminal with commands',
-                    'File manager with grid view',
-                    'System monitor with live metrics',
-                    'Code editor & browser',
-                    'Music player & chat app'
-                ]
-            },
-            {
-                name: 'NeuroNet Workspace',
-                file: 'neuronet_workspace.html',
-                icon: '🧠',
-                theme: 'neural',
-                description: 'Neural network and AI/ML development environment with purple neural aesthetics.',
-                features: [
-                    'Neural network visualizer',
-                    'Model training center',
-                    'Dataset manager',
-                    'AI dashboard with metrics',
-                    'Model library browser'
-                ]
-            },
-            {
-                name: 'Quantum Desktop',
-                file: 'quantum_desktop.html',
-                icon: '⚛️',
-                theme: 'quantum',
-                description: 'Quantum computing development environment with circuit builders and state visualizers.',
-                features: [
-                    'Quantum circuit builder',
-                    'State visualizer with Bloch sphere',
-                    'Quantum simulator console',
-                    'Algorithm library (Grover, Shor)',
-                    'QASM code editor'
-                ]
-            },
-            {
-                name: 'RetroWave OS',
-                file: 'retrowave_desktop.html',
-                icon: '🌆',
-                theme: 'retro',
-                description: '1980s vaporwave/synthwave aesthetic with animated sunset grid and neon effects.',
-                features: [
-                    'Animated 3D grid background',
-                    'MS-DOS style terminal',
-                    'Synthwave music player',
-                    'Retro arcade games',
-                    'Pixel art paint tool'
-                ]
-            },
-            {
-                name: 'Konomi Cube System',
-                file: 'Konomi_Cube_Live_Enhanced.html',
-                icon: '🧬',
-                theme: 'konomi',
-                description: 'Enhanced 3D cube system with vertex agents, neural networks, and hash processing.',
-                features: [
-                    '3D rotating cube visualization',
-                    'Vertex agent processors',
-                    'Layer frame architecture',
-                    'Neural link networks',
-                    'Real-time hash compression'
-                ]
-            },
-            {
-                name: 'AI-OS Φ',
-                file: 'AI-OS_Phi_Entropy_Balanced.html',
-                icon: '⚖️',
-                theme: 'ai',
-                description: 'Entropy-balanced neural core with agent forest ecosystem and golden ratio equilibrium.',
-                features: [
-                    'Multi-generational agent forest',
-                    'Entropy governance system',
-                    'Phase space oscillator',
-                    'Evolutionary dynamics',
-                    'Timeline management'
-                ]
-            },
-            {
-                name: 'SnT Compiler',
-                file: 'SnT_Compiler_Emoji_Cube.html',
-                icon: '🔮',
-                theme: 'snt',
-                description: 'Emoji³ cube-based compiler system with quantum operations and photonic backends.',
-                features: [
-                    '10-layer compilation cube',
-                    'Quantum & temporal operations',
-                    'Multi-target code generation',
-                    'Real-time performance metrics',
-                    'Interactive emoji operations'
-                ]
-            },
-            {
-                name: 'H4CK3R T3RM1N4L',
-                file: 'hacker_terminal.html',
-                icon: '👾',
-                theme: 'cyber',
-                description: 'Elite hacker terminal with network mapping, exploit database, and security tools.',
-                features: [
-                    'Working terminal with commands',
-                    'Network topology mapper',
-                    'Exploit database (CVEs)',
-                    'Real-time packet sniffer',
-                    'Process manager & hex viewer'
-                ]
-            }
-        ];
+        // Auto-load desktop configurations from manifest
+        let desktops = [];
 
         // Generate desktop cards
-        function generateCards() {
+        function generateCards(desktops) {
             const grid = document.getElementById('desktopGrid');
+            grid.innerHTML = ''; // Clear existing content
 
             desktops.forEach(desktop => {
                 const card = document.createElement('div');
@@ -517,12 +405,26 @@
                 <div class="add-more-text">
                     <strong>Add More Desktops</strong><br>
                     <span style="font-size: 0.9em; color: #666;">
-                        Create new HTML files in the root directory<br>
-                        and add them to the desktops array in index.html
+                        Create new HTML files, then run:<br>
+                        <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 5px;">node generate-manifest.js</code><br>
+                        The index will auto-update from desktops.json!
                     </span>
                 </div>
             `;
             grid.appendChild(addCard);
+
+            // Add card click animations
+            document.querySelectorAll('.desktop-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Only trigger if clicking the card itself, not the buttons
+                    if (e.target === this || e.target.classList.contains('card-icon')) {
+                        const primaryBtn = this.querySelector('.btn-primary');
+                        if (primaryBtn) {
+                            window.location.href = primaryBtn.href;
+                        }
+                    }
+                });
+            });
         }
 
         // Create floating particles
@@ -538,28 +440,55 @@
             }
         }
 
-        // Initialize
-        generateCards();
-        createParticles();
-
-        // Add card click animations
-        document.querySelectorAll('.desktop-card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                // Only trigger if clicking the card itself, not the buttons
-                if (e.target === this || e.target.classList.contains('card-icon')) {
-                    const primaryBtn = this.querySelector('.btn-primary');
-                    if (primaryBtn) {
-                        window.location.href = primaryBtn.href;
-                    }
+        // Load desktops from manifest and initialize
+        async function initialize() {
+            try {
+                const response = await fetch('desktops.json');
+                if (!response.ok) {
+                    throw new Error('Manifest not found. Run: node generate-manifest.js');
                 }
-            });
-        });
 
-        // Log available desktops to console for easy reference
-        console.log('Available Virtual Desktops:');
-        desktops.forEach((d, i) => {
-            console.log(`${i + 1}. ${d.name} - ${d.file}`);
-        });
+                const data = await response.json();
+                desktops = data.desktops;
+
+                console.log(`✅ Loaded ${desktops.length} desktops from manifest`);
+                console.log(`📅 Generated: ${new Date(data.generated).toLocaleString()}`);
+                console.log('\nAvailable Virtual Desktops:');
+                desktops.forEach((d, i) => {
+                    console.log(`${i + 1}. ${d.name} - ${d.file}`);
+                });
+
+                generateCards(desktops);
+                createParticles();
+            } catch (error) {
+                console.error('❌ Error loading desktops:', error.message);
+
+                // Show error message on page
+                const grid = document.getElementById('desktopGrid');
+                grid.innerHTML = `
+                    <div class="desktop-card" style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+                        <div style="font-size: 4em; margin-bottom: 20px;">⚠️</div>
+                        <h2 style="margin-bottom: 20px; color: #ff6b6b;">Desktop Manifest Not Found</h2>
+                        <p style="color: #888; margin-bottom: 30px; line-height: 1.8;">
+                            The desktops.json manifest file is missing.<br>
+                            Please run the following command to generate it:
+                        </p>
+                        <code style="background: rgba(255,255,255,0.1); padding: 15px 30px; border-radius: 10px; display: inline-block; font-size: 1.2em; color: #4ade80;">
+                            node generate-manifest.js
+                        </code>
+                        <p style="color: #666; margin-top: 30px; font-size: 0.9em;">
+                            This will automatically scan all HTML files in the root directory<br>
+                            and create the manifest for the index page.
+                        </p>
+                    </div>
+                `;
+
+                createParticles();
+            }
+        }
+
+        // Start the app
+        initialize();
     </script>
 </body>
 </html>

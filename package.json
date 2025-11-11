@@ -1,0 +1,24 @@
+{
+  "name": "igotvd",
+  "version": "1.0.0",
+  "description": "Virtual Desktop Collection - Browser-based operating systems and workspaces",
+  "main": "index.html",
+  "scripts": {
+    "manifest": "node generate-manifest.js",
+    "update": "node generate-manifest.js"
+  },
+  "keywords": [
+    "virtual-desktop",
+    "browser-os",
+    "web-desktop",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teslasolar/IGotVD.git"
+  }
+}
