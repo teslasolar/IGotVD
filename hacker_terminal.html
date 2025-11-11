@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H4CK3R T3RM1N4L - Elite Access System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0; }
+        }
+
+        body {
+            font-family: 'Courier New', 'Consolas', monospace;
+            background: #000;
+            color: #0f0;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        #scanline {
+            position: fixed;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(transparent, #0f0, transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.3;
+        }
+
+        .terminal-container {
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: 40px 1fr 30px;
+            gap: 2px;
+            background: #000;
+        }
+
+        .panel {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #0f0;
+            box-shadow: 0 0 5px #0f0;
+        }
+
+        #header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background: #001100;
+            border: 1px solid #0f0;
+        }
+
+        #header-title {
+            font-weight: bold;
+            letter-spacing: 3px;
+            animation: glitch 5s infinite;
+        }
+
+        #header-status {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #0f0;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #0f0;
+            animation: blink 2s infinite;
+        }
+
+        #sidebar {
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-section {
+            border: 1px solid #0f0;
+            padding: 10px;
+            background: #001100;
+        }
+
+        .section-title {
+            color: #0ff;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .menu-item {
+            padding: 6px;
+            margin: 3px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: #002200;
+            border-left-color: #0f0;
+            padding-left: 12px;
+        }
+
+        .menu-item.active {
+            background: #003300;
+            border-left-color: #0ff;
+        }
+
+        #main-terminal {
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .terminal-window {
+            flex: 1;
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .terminal-window.active {
+            display: block;
+        }
+
+        .terminal-line {
+            margin: 2px 0;
+            word-wrap: break-word;
+        }
+
+        .prompt {
+            color: #0ff;
+            font-weight: bold;
+        }
+
+        .prompt::after {
+            content: '█';
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        .command {
+            color: #ff0;
+        }
+
+        .output {
+            color: #0f0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .success {
+            color: #0ff;
+        }
+
+        .warning {
+            color: #fa0;
+        }
+
+        #footer {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background: #001100;
+            border: 1px solid #0f0;
+            font-size: 11px;
+        }
+
+        .footer-section {
+            display: flex;
+            gap: 15px;
+        }
+
+        #command-input {
+            width: 100%;
+            background: #000;
+            border: 1px solid #0f0;
+            color: #0f0;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        #command-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        .network-graph {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+            margin-top: 10px;
+        }
+
+        .network-node {
+            aspect-ratio: 1;
+            background: #001100;
+            border: 1px solid #0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .network-node:hover {
+            background: #003300;
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        .network-node.active {
+            background: #0f0;
+            animation: blink 1s infinite;
+        }
+
+        .network-node.compromised {
+            background: #f00;
+            box-shadow: 0 0 10px #f00;
+        }
+
+        .hex-viewer {
+            display: grid;
+            grid-template-columns: 80px 1fr 200px;
+            gap: 20px;
+            font-size: 11px;
+        }
+
+        .hex-address {
+            color: #0ff;
+        }
+
+        .hex-data {
+            color: #0f0;
+            letter-spacing: 2px;
+        }
+
+        .hex-ascii {
+            color: #fa0;
+        }
+
+        .process-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .process-item {
+            display: grid;
+            grid-template-columns: 60px 1fr 80px 60px;
+            gap: 10px;
+            padding: 5px;
+            border: 1px solid #0f0;
+            background: #001100;
+            font-size: 11px;
+        }
+
+        .process-pid {
+            color: #0ff;
+        }
+
+        .process-name {
+            color: #0f0;
+        }
+
+        .process-cpu {
+            color: #fa0;
+        }
+
+        .process-mem {
+            color: #f0f;
+        }
+
+        .exploit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .exploit-card {
+            border: 1px solid #0f0;
+            padding: 10px;
+            background: #001100;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .exploit-card:hover {
+            background: #003300;
+            box-shadow: 0 0 15px #0f0;
+            transform: scale(1.05);
+        }
+
+        .exploit-title {
+            color: #0ff;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .exploit-desc {
+            color: #0f0;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .exploit-severity {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .severity-critical {
+            color: #f00;
+        }
+
+        .severity-high {
+            color: #fa0;
+        }
+
+        .severity-medium {
+            color: #ff0;
+        }
+
+        .packet-sniffer {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .packet {
+            display: grid;
+            grid-template-columns: 80px 120px 120px 1fr 60px;
+            gap: 10px;
+            padding: 5px;
+            border: 1px solid #0f0;
+            background: #001100;
+            font-size: 11px;
+        }
+
+        .packet-time {
+            color: #0ff;
+        }
+
+        .packet-src {
+            color: #0f0;
+        }
+
+        .packet-dst {
+            color: #fa0;
+        }
+
+        .packet-proto {
+            color: #f0f;
+        }
+
+        .packet-len {
+            color: #ff0;
+        }
+
+        .code-editor {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 15px;
+        }
+
+        .line-number {
+            color: #0ff;
+            min-width: 40px;
+            text-align: right;
+            user-select: none;
+        }
+
+        .line-code {
+            color: #0f0;
+        }
+
+        .keyword {
+            color: #0ff;
+            font-weight: bold;
+        }
+
+        .string {
+            color: #fa0;
+        }
+
+        .comment {
+            color: #666;
+            font-style: italic;
+        }
+
+        .function {
+            color: #f0f;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #0f0;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="scanline"></div>
+
+    <div class="terminal-container">
+        <div id="header">
+            <div id="header-title">H4CK3R T3RM1N4L v3.37</div>
+            <div id="header-status">
+                <div class="status-item">
+                    <div class="status-indicator"></div>
+                    <span>CONNECTED</span>
+                </div>
+                <div class="status-item">
+                    <span>IP: 127.0.0.1</span>
+                </div>
+                <div class="status-item">
+                    <span id="header-clock">00:00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="sidebar" class="panel">
+            <div class="sidebar-section">
+                <div class="section-title">◉ MAIN MENU</div>
+                <div class="menu-item active" onclick="showWindow('terminal')">└─ Terminal</div>
+                <div class="menu-item" onclick="showWindow('network')">└─ Network Map</div>
+                <div class="menu-item" onclick="showWindow('exploits')">└─ Exploit DB</div>
+                <div class="menu-item" onclick="showWindow('sniffer')">└─ Packet Sniffer</div>
+                <div class="menu-item" onclick="showWindow('processes')">└─ Process Manager</div>
+                <div class="menu-item" onclick="showWindow('hexdump')">└─ Hex Viewer</div>
+                <div class="menu-item" onclick="showWindow('editor')">└─ Code Editor</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">◉ TARGETS</div>
+                <div class="menu-item">└─ 192.168.1.1</div>
+                <div class="menu-item">└─ 10.0.0.254</div>
+                <div class="menu-item">└─ 172.16.0.100</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">◉ TOOLS</div>
+                <div class="menu-item">└─ Port Scanner</div>
+                <div class="menu-item">└─ MITM Attack</div>
+                <div class="menu-item">└─ SQL Injection</div>
+                <div class="menu-item">└─ Brute Force</div>
+            </div>
+        </div>
+
+        <div id="main-terminal" class="panel">
+            <!-- Terminal Window -->
+            <div id="terminal" class="terminal-window active">
+                <div class="terminal-line prompt">root@h4ck3r:~#</div>
+                <div class="terminal-line output">Welcome to H4CK3R T3RM1N4L Elite Access System</div>
+                <div class="terminal-line output">System Version: 3.37-ELITE</div>
+                <div class="terminal-line output">Kernel: Linux 6.6.6-hacker</div>
+                <div class="terminal-line output"></div>
+                <div class="terminal-line output">Type 'help' for available commands</div>
+                <div class="terminal-line output">Type 'scan' to discover network targets</div>
+                <div class="terminal-line output">Type 'exploit' to launch attack vectors</div>
+                <div class="terminal-line output"></div>
+                <div class="terminal-line prompt">root@h4ck3r:~#</div>
+                <input type="text" id="command-input" placeholder="Enter command..." autofocus>
+            </div>
+
+            <!-- Network Map Window -->
+            <div id="network" class="terminal-window">
+                <div class="terminal-line success">NETWORK TOPOLOGY MAP</div>
+                <div class="terminal-line output">Discovered nodes: <span id="node-count">0</span></div>
+                <div class="network-graph" id="network-graph"></div>
+            </div>
+
+            <!-- Exploits Window -->
+            <div id="exploits" class="terminal-window">
+                <div class="terminal-line success">EXPLOIT DATABASE</div>
+                <div class="terminal-line output">Available exploits and attack vectors</div>
+                <div class="terminal-line output"></div>
+                <div class="exploit-grid">
+                    <div class="exploit-card" onclick="launchExploit('buffer')">
+                        <div class="exploit-title">CVE-2024-0001</div>
+                        <div class="exploit-desc">Buffer Overflow in SSH daemon</div>
+                        <div class="exploit-severity severity-critical">CRITICAL</div>
+                    </div>
+                    <div class="exploit-card" onclick="launchExploit('sql')">
+                        <div class="exploit-title">SQL Injection</div>
+                        <div class="exploit-desc">Bypass authentication layer</div>
+                        <div class="exploit-severity severity-high">HIGH</div>
+                    </div>
+                    <div class="exploit-card" onclick="launchExploit('xss')">
+                        <div class="exploit-title">XSS Attack</div>
+                        <div class="exploit-desc">Cross-site scripting payload</div>
+                        <div class="exploit-severity severity-medium">MEDIUM</div>
+                    </div>
+                    <div class="exploit-card" onclick="launchExploit('rce')">
+                        <div class="exploit-title">Remote Code Exec</div>
+                        <div class="exploit-desc">Execute arbitrary commands</div>
+                        <div class="exploit-severity severity-critical">CRITICAL</div>
+                    </div>
+                    <div class="exploit-card" onclick="launchExploit('privesc')">
+                        <div class="exploit-title">Privilege Escalation</div>
+                        <div class="exploit-desc">Gain root access</div>
+                        <div class="exploit-severity severity-high">HIGH</div>
+                    </div>
+                    <div class="exploit-card" onclick="launchExploit('dos')">
+                        <div class="exploit-title">DoS Attack</div>
+                        <div class="exploit-desc">Denial of service flood</div>
+                        <div class="exploit-severity severity-medium">MEDIUM</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packet Sniffer Window -->
+            <div id="sniffer" class="terminal-window">
+                <div class="terminal-line success">PACKET SNIFFER - CAPTURING TRAFFIC</div>
+                <div class="terminal-line output">Interface: eth0 | Packets captured: <span id="packet-count">0</span></div>
+                <div class="terminal-line output"></div>
+                <div class="packet-sniffer" id="packet-list"></div>
+            </div>
+
+            <!-- Process Manager Window -->
+            <div id="processes" class="terminal-window">
+                <div class="terminal-line success">PROCESS MANAGER</div>
+                <div class="terminal-line output">Active system processes</div>
+                <div class="terminal-line output"></div>
+                <div class="process-list" id="process-list"></div>
+            </div>
+
+            <!-- Hex Viewer Window -->
+            <div id="hexdump" class="terminal-window">
+                <div class="terminal-line success">HEX MEMORY VIEWER</div>
+                <div class="terminal-line output">Memory dump at 0x00000000</div>
+                <div class="terminal-line output"></div>
+                <div class="hex-viewer" id="hex-viewer"></div>
+            </div>
+
+            <!-- Code Editor Window -->
+            <div id="editor" class="terminal-window">
+                <div class="terminal-line success">CODE EDITOR - exploit.py</div>
+                <div class="terminal-line output"></div>
+                <div class="code-editor">
+                    <div class="code-line">
+                        <span class="line-number">1</span>
+                        <span class="line-code"><span class="comment">#!/usr/bin/env python3</span></span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">2</span>
+                        <span class="line-code"><span class="keyword">import</span> socket, sys, struct</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">3</span>
+                        <span class="line-code"></span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">4</span>
+                        <span class="line-code"><span class="keyword">def</span> <span class="function">exploit</span>(target, port):</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">5</span>
+                        <span class="line-code">    <span class="comment"># Buffer overflow payload</span></span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">6</span>
+                        <span class="line-code">    payload = <span class="string">b"A"</span> * 1024</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">7</span>
+                        <span class="line-code">    payload += struct.pack(<span class="string">"<Q"</span>, 0xdeadbeef)</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">8</span>
+                        <span class="line-code">    </span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">9</span>
+                        <span class="line-code">    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">10</span>
+                        <span class="line-code">    s.connect((target, port))</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">11</span>
+                        <span class="line-code">    s.send(payload)</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">12</span>
+                        <span class="line-code">    <span class="keyword">return</span> s.recv(4096)</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">13</span>
+                        <span class="line-code"></span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">14</span>
+                        <span class="line-code"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">15</span>
+                        <span class="line-code">    result = exploit(<span class="string">"192.168.1.1"</span>, 22)</span>
+                    </div>
+                    <div class="code-line">
+                        <span class="line-number">16</span>
+                        <span class="line-code">    print(<span class="string">f"Response: {result}"</span>)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="footer">
+            <div class="footer-section">
+                <span>SESSION: <span id="session-id">4F7B3E2A</span></span>
+                <span>UPTIME: <span id="uptime">00:00:00</span></span>
+                <span>PACKETS: <span id="footer-packets">0</span></span>
+            </div>
+            <div class="footer-section">
+                <span>CPU: <span id="footer-cpu">0%</span></span>
+                <span>MEM: <span id="footer-mem">0MB</span></span>
+                <span>DISK: <span id="footer-disk">0 I/O</span></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Window Management
+        function showWindow(windowId) {
+            document.querySelectorAll('.terminal-window').forEach(w => w.classList.remove('active'));
+            document.getElementById(windowId).classList.add('active');
+
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Command Processing
+        const terminalOutput = document.getElementById('terminal');
+        const commandInput = document.getElementById('command-input');
+
+        commandInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value.trim();
+                addTerminalLine('command', `root@h4ck3r:~# ${command}`);
+
+                processCommand(command);
+                this.value = '';
+            }
+        });
+
+        function addTerminalLine(type, text) {
+            const line = document.createElement('div');
+            line.className = `terminal-line ${type}`;
+            line.textContent = text;
+            terminalOutput.insertBefore(line, commandInput);
+            commandInput.scrollIntoView();
+        }
+
+        function processCommand(cmd) {
+            const commands = {
+                'help': () => {
+                    addTerminalLine('output', 'Available commands:');
+                    addTerminalLine('output', '  scan - Scan network for targets');
+                    addTerminalLine('output', '  exploit <target> - Launch exploit');
+                    addTerminalLine('output', '  sniff - Start packet capture');
+                    addTerminalLine('output', '  ps - List processes');
+                    addTerminalLine('output', '  dump <addr> - Memory dump');
+                    addTerminalLine('output', '  clear - Clear terminal');
+                },
+                'scan': () => {
+                    addTerminalLine('success', 'Scanning network...');
+                    setTimeout(() => {
+                        addTerminalLine('output', 'Found: 192.168.1.1 (OPEN)');
+                        addTerminalLine('output', 'Found: 10.0.0.254 (FILTERED)');
+                        addTerminalLine('output', 'Found: 172.16.0.100 (OPEN)');
+                        addTerminalLine('success', 'Scan complete. 3 hosts discovered.');
+                    }, 1000);
+                },
+                'exploit': () => {
+                    addTerminalLine('warning', 'Launching exploit...');
+                    setTimeout(() => {
+                        addTerminalLine('success', 'Shell obtained! Access granted.');
+                        addTerminalLine('output', 'root@target:~#');
+                    }, 1500);
+                },
+                'sniff': () => {
+                    addTerminalLine('success', 'Packet capture started on eth0');
+                    startPacketCapture();
+                },
+                'ps': () => {
+                    addTerminalLine('output', 'PID    PROCESS          CPU    MEM');
+                    addTerminalLine('output', '1      systemd          0.1%   4MB');
+                    addTerminalLine('output', '1337   h4ck3r.bin      15.2%   128MB');
+                    addTerminalLine('output', '2048   exploit.py       8.3%   64MB');
+                },
+                'clear': () => {
+                    terminalOutput.innerHTML = '<div class="terminal-line prompt">root@h4ck3r:~#</div>';
+                    terminalOutput.appendChild(commandInput);
+                },
+                'whoami': () => {
+                    addTerminalLine('output', 'root');
+                },
+                'uname': () => {
+                    addTerminalLine('output', 'Linux h4ck3r 6.6.6-hacker #1 SMP PREEMPT x86_64 GNU/Linux');
+                }
+            };
+
+            if (commands[cmd]) {
+                commands[cmd]();
+            } else if (cmd) {
+                addTerminalLine('error', `Command not found: ${cmd}`);
+            }
+        }
+
+        // Network Map
+        function initNetworkMap() {
+            const grid = document.getElementById('network-graph');
+            let nodeCount = 0;
+
+            for (let i = 0; i < 100; i++) {
+                const node = document.createElement('div');
+                node.className = 'network-node';
+                node.onclick = function() {
+                    if (!this.classList.contains('active')) {
+                        this.classList.add('active');
+                        nodeCount++;
+                        document.getElementById('node-count').textContent = nodeCount;
+
+                        if (Math.random() > 0.7) {
+                            setTimeout(() => {
+                                this.classList.remove('active');
+                                this.classList.add('compromised');
+                            }, 2000);
+                        }
+                    }
+                };
+                grid.appendChild(node);
+            }
+        }
+
+        // Packet Sniffer
+        let packetCount = 0;
+        function startPacketCapture() {
+            setInterval(() => {
+                const protocols = ['TCP', 'UDP', 'ICMP', 'HTTP', 'SSH', 'DNS'];
+                const packet = document.createElement('div');
+                packet.className = 'packet';
+
+                const time = new Date().toTimeString().split(' ')[0];
+                const src = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+                const dst = `10.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+                const proto = protocols[Math.floor(Math.random() * protocols.length)];
+                const len = Math.floor(Math.random() * 1500);
+
+                packet.innerHTML = `
+                    <span class="packet-time">${time}</span>
+                    <span class="packet-src">${src}</span>
+                    <span class="packet-dst">${dst}</span>
+                    <span class="packet-proto">${proto}</span>
+                    <span class="packet-len">${len}B</span>
+                `;
+
+                const list = document.getElementById('packet-list');
+                list.insertBefore(packet, list.firstChild);
+
+                if (list.children.length > 50) {
+                    list.removeChild(list.lastChild);
+                }
+
+                packetCount++;
+                document.getElementById('packet-count').textContent = packetCount;
+                document.getElementById('footer-packets').textContent = packetCount;
+            }, 500);
+        }
+
+        // Process Manager
+        function updateProcesses() {
+            const processes = [
+                { pid: 1, name: 'systemd', cpu: '0.1', mem: '4' },
+                { pid: 1337, name: 'h4ck3r.bin', cpu: (10 + Math.random() * 10).toFixed(1), mem: '128' },
+                { pid: 2048, name: 'exploit.py', cpu: (5 + Math.random() * 5).toFixed(1), mem: '64' },
+                { pid: 3141, name: 'keylogger', cpu: (1 + Math.random() * 3).toFixed(1), mem: '32' },
+                { pid: 4096, name: 'sniffer', cpu: (15 + Math.random() * 10).toFixed(1), mem: '256' }
+            ];
+
+            const list = document.getElementById('process-list');
+            list.innerHTML = '';
+
+            processes.forEach(proc => {
+                const item = document.createElement('div');
+                item.className = 'process-item';
+                item.innerHTML = `
+                    <span class="process-pid">${proc.pid}</span>
+                    <span class="process-name">${proc.name}</span>
+                    <span class="process-cpu">${proc.cpu}%</span>
+                    <span class="process-mem">${proc.mem}MB</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        setInterval(updateProcesses, 2000);
+        updateProcesses();
+
+        // Hex Viewer
+        function generateHexDump() {
+            const viewer = document.getElementById('hex-viewer');
+            for (let i = 0; i < 16; i++) {
+                const addr = (i * 16).toString(16).toUpperCase().padStart(8, '0');
+
+                let hexData = '';
+                let asciiData = '';
+                for (let j = 0; j < 16; j++) {
+                    const byte = Math.floor(Math.random() * 256);
+                    hexData += byte.toString(16).toUpperCase().padStart(2, '0') + ' ';
+                    asciiData += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
+                }
+
+                const line = document.createElement('div');
+                line.style.display = 'contents';
+                line.innerHTML = `
+                    <span class="hex-address">${addr}</span>
+                    <span class="hex-data">${hexData}</span>
+                    <span class="hex-ascii">${asciiData}</span>
+                `;
+                viewer.appendChild(line);
+            }
+        }
+
+        generateHexDump();
+
+        // Exploit Launcher
+        function launchExploit(type) {
+            showWindow('terminal');
+            addTerminalLine('warning', `Launching ${type} exploit...`);
+            setTimeout(() => {
+                addTerminalLine('success', 'Exploit successful! Target compromised.');
+            }, 1500);
+        }
+
+        // Footer Stats
+        function updateStats() {
+            document.getElementById('footer-cpu').textContent = (Math.random() * 100).toFixed(1) + '%';
+            document.getElementById('footer-mem').textContent = Math.floor(Math.random() * 1024) + 'MB';
+            document.getElementById('footer-disk').textContent = Math.floor(Math.random() * 100) + ' I/O';
+        }
+
+        setInterval(updateStats, 1000);
+
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('header-clock').textContent = now.toTimeString().split(' ')[0];
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Uptime
+        let uptime = 0;
+        setInterval(() => {
+            uptime++;
+            const hours = Math.floor(uptime / 3600).toString().padStart(2, '0');
+            const minutes = Math.floor((uptime % 3600) / 60).toString().padStart(2, '0');
+            const seconds = (uptime % 60).toString().padStart(2, '0');
+            document.getElementById('uptime').textContent = `${hours}:${minutes}:${seconds}`;
+        }, 1000);
+
+        // Initialize
+        initNetworkMap();
+        commandInput.focus();
+    </script>
+</body>
+</html>
