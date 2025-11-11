@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon City Control - Urban Management System</title>
+    <meta name="description" content="Cyberpunk city management system with surveillance, traffic control, building automation, and crime monitoring">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-pink: #ff006e;
+            --neon-blue: #00f5ff;
+            --neon-purple: #8b00ff;
+            --neon-yellow: #ffea00;
+            --bg-dark: #0d0221;
+            --bg-darker: #050011;
+            --text: #e0e0ff;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, var(--bg-darker) 0%, #1a0033 100%);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 0, 110, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 110, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+            animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        .desktop {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-bar {
+            background: linear-gradient(180deg, rgba(255, 0, 110, 0.2) 0%, rgba(139, 0, 255, 0.2) 100%);
+            border-bottom: 2px solid var(--neon-pink);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 30px rgba(255, 0, 110, 0.5);
+        }
+
+        .city-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--neon-pink) 0%, var(--neon-purple) 50%, var(--neon-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 0, 110, 0.8);
+        }
+
+        .alert-ticker {
+            flex: 1;
+            margin: 0 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-blue);
+            padding: 8px 15px;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-content {
+            white-space: nowrap;
+            animation: ticker 20s linear infinite;
+            color: var(--neon-blue);
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 15px;
+        }
+
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse-glow 2s infinite;
+        }
+
+        .status-green { background: #00ff41; box-shadow: 0 0 15px #00ff41; }
+        .status-yellow { background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
+        .status-red { background: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .control-panel {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: rgba(255, 0, 110, 0.05);
+            border: 1px solid var(--neon-pink);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.3);
+        }
+
+        .menu-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(139, 0, 255, 0.1);
+            border: 1px solid var(--neon-purple);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .menu-item:hover {
+            background: rgba(139, 0, 255, 0.3);
+            box-shadow: 0 0 20px rgba(139, 0, 255, 0.8);
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background: rgba(255, 0, 110, 0.3);
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 25px rgba(255, 0, 110, 0.8);
+        }
+
+        .content-area {
+            display: none;
+        }
+
+        .content-area.active {
+            display: block;
+        }
+
+        .surveillance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .camera-feed {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 10px;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+        }
+
+        .camera-label {
+            color: var(--neon-blue);
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .camera-status {
+            color: #00ff41;
+            font-size: 0.75em;
+        }
+
+        .camera-view {
+            width: 100%;
+            height: calc(100% - 25px);
+            background: linear-gradient(135deg, rgba(0,245,255,0.1) 0%, rgba(139,0,255,0.1) 100%);
+            border: 1px solid rgba(0,245,255,0.3);
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .detection-box {
+            position: absolute;
+            border: 2px solid var(--neon-yellow);
+            box-shadow: 0 0 10px var(--neon-yellow);
+            pointer-events: none;
+        }
+
+        .traffic-map {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-pink);
+            border-radius: 10px;
+            padding: 20px;
+            height: 500px;
+            position: relative;
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.4);
+        }
+
+        .traffic-node {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-yellow);
+            background: rgba(255, 234, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+
+        .traffic-node:hover {
+            transform: scale(1.5);
+            box-shadow: 0 0 20px var(--neon-yellow);
+        }
+
+        .traffic-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-pink) 0%, var(--neon-purple) 100%);
+            transform-origin: left center;
+            box-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        .building-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .building-card {
+            background: rgba(139, 0, 255, 0.1);
+            border: 2px solid var(--neon-purple);
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .building-card:hover {
+            background: rgba(139, 0, 255, 0.2);
+            box-shadow: 0 0 25px rgba(139, 0, 255, 0.6);
+            transform: translateY(-5px);
+        }
+
+        .building-name {
+            color: var(--neon-purple);
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .building-stat {
+            font-size: 0.85em;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-value {
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        .crime-feed {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-pink);
+            border-radius: 10px;
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.4);
+        }
+
+        .crime-report {
+            background: rgba(255, 0, 110, 0.1);
+            border-left: 4px solid var(--neon-pink);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .crime-report:hover {
+            background: rgba(255, 0, 110, 0.2);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+        }
+
+        .crime-severity {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .severity-high { background: var(--neon-pink); color: black; }
+        .severity-medium { background: var(--neon-yellow); color: black; }
+        .severity-low { background: var(--neon-blue); color: black; }
+
+        .crime-location {
+            color: var(--neon-blue);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .power-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .power-cell {
+            aspect-ratio: 1;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .power-cell.active {
+            background: rgba(0, 245, 255, 0.4);
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        .power-cell:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 0, 110, 0.1);
+            border: 2px solid var(--neon-pink);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        .stat-label {
+            color: var(--text);
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-pink);
+            border-radius: 5px;
+        }
+
+        .weather-widget {
+            background: rgba(0, 245, 255, 0.1);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .weather-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .weather-icon {
+            font-size: 4em;
+        }
+
+        .weather-info {
+            text-align: right;
+        }
+
+        .temperature {
+            font-size: 2.5em;
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <div class="desktop">
+        <div class="header-bar">
+            <div class="city-title">🌆 NEON CITY CONTROL</div>
+            <div class="alert-ticker">
+                <div class="ticker-content">
+                    🚨 Traffic incident at Downtown Junction • 🔧 Maintenance scheduled for Sector 7 •
+                    ✅ Power grid operating at 94% efficiency • 🚔 Police dispatch to Market District •
+                    ⚠️ Weather alert: Heavy rain expected 22:00 • 📡 Communications tower upgrade complete
+                </div>
+            </div>
+            <div class="status-indicators">
+                <div class="status-light status-green" title="Power Grid"></div>
+                <div class="status-light status-green" title="Communications"></div>
+                <div class="status-light status-yellow" title="Traffic Flow"></div>
+                <div class="status-light status-red" title="Crime Alert"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="sidebar">
+                <div class="menu-item active" onclick="showContent('surveillance')">📹 SURVEILLANCE</div>
+                <div class="menu-item" onclick="showContent('traffic')">🚦 TRAFFIC</div>
+                <div class="menu-item" onclick="showContent('buildings')">🏢 BUILDINGS</div>
+                <div class="menu-item" onclick="showContent('crime')">🚔 CRIME</div>
+                <div class="menu-item" onclick="showContent('power')">⚡ POWER GRID</div>
+                <div class="menu-item" onclick="showContent('analytics')">📊 ANALYTICS</div>
+            </div>
+
+            <div id="main-content">
+                <!-- Surveillance Content -->
+                <div class="content-area active" id="surveillance">
+                    <h2 style="color: var(--neon-blue); margin-bottom: 20px;">City Surveillance Network</h2>
+                    <div class="surveillance-grid" id="cameraGrid"></div>
+                </div>
+
+                <!-- Traffic Content -->
+                <div class="content-area" id="traffic">
+                    <h2 style="color: var(--neon-pink); margin-bottom: 20px;">Traffic Control System</h2>
+                    <div class="stats-dashboard">
+                        <div class="stat-card">
+                            <div class="stat-number">2,847</div>
+                            <div class="stat-label">Active Vehicles</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">42</div>
+                            <div class="stat-label">Traffic Lights</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Incidents</div>
+                        </div>
+                    </div>
+                    <div class="traffic-map" id="trafficMap"></div>
+                </div>
+
+                <!-- Buildings Content -->
+                <div class="content-area" id="buildings">
+                    <h2 style="color: var(--neon-purple); margin-bottom: 20px;">Building Management</h2>
+                    <div class="building-grid" id="buildingGrid"></div>
+                </div>
+
+                <!-- Crime Content -->
+                <div class="content-area" id="crime">
+                    <h2 style="color: var(--neon-pink); margin-bottom: 20px;">Crime Monitoring System</h2>
+                    <div class="crime-feed" id="crimeFeed"></div>
+                </div>
+
+                <!-- Power Grid Content -->
+                <div class="content-area" id="power">
+                    <h2 style="color: var(--neon-blue); margin-bottom: 20px;">Power Distribution Grid</h2>
+                    <div class="stats-dashboard">
+                        <div class="stat-card">
+                            <div class="stat-number">94%</div>
+                            <div class="stat-label">Grid Efficiency</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">847 MW</div>
+                            <div class="stat-label">Current Load</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Power Stations</div>
+                        </div>
+                    </div>
+                    <div class="power-grid" id="powerGrid"></div>
+                </div>
+
+                <!-- Analytics Content -->
+                <div class="content-area" id="analytics">
+                    <h2 style="color: var(--neon-purple); margin-bottom: 20px;">City Analytics Dashboard</h2>
+
+                    <div class="weather-widget">
+                        <h3 style="color: var(--neon-blue); margin-bottom: 15px;">Current Weather</h3>
+                        <div class="weather-display">
+                            <div class="weather-icon">🌧️</div>
+                            <div class="weather-info">
+                                <div class="temperature">18°C</div>
+                                <div style="color: var(--text); margin-top: 5px;">Rainy • Wind: 15 km/h</div>
+                                <div style="color: var(--neon-blue); font-size: 0.85em; margin-top: 5px;">Humidity: 82%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-dashboard">
+                        <div class="stat-card">
+                            <div class="stat-number">8.4M</div>
+                            <div class="stat-label">Population</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">342</div>
+                            <div class="stat-label">Buildings Monitored</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">1,284</div>
+                            <div class="stat-label">Cameras Active</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">42,891</div>
+                            <div class="stat-label">Daily Commuters</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">99.2%</div>
+                            <div class="stat-label">System Uptime</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">67</div>
+                            <div class="stat-label">Emergency Units</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize camera feeds
+        function initCameras() {
+            const grid = document.getElementById('cameraGrid');
+            const locations = [
+                'Downtown Plaza', 'Main Street', 'Park Avenue',
+                'Tech District', 'Harbor View', 'Shopping Mall',
+                'Transit Hub', 'Financial Center', 'Residential Zone'
+            ];
+
+            locations.forEach((loc, i) => {
+                const feed = document.createElement('div');
+                feed.className = 'camera-feed';
+                feed.innerHTML = `
+                    <div class="camera-label">
+                        <span>📹 ${loc}</span>
+                        <span class="camera-status">● LIVE</span>
+                    </div>
+                    <div class="camera-view" id="camera${i}"></div>
+                `;
+                grid.appendChild(feed);
+
+                // Add detection boxes
+                const view = document.getElementById(`camera${i}`);
+                for (let j = 0; j < Math.floor(Math.random() * 3) + 1; j++) {
+                    const box = document.createElement('div');
+                    box.className = 'detection-box';
+                    box.style.width = (Math.random() * 40 + 30) + 'px';
+                    box.style.height = (Math.random() * 40 + 30) + 'px';
+                    box.style.left = (Math.random() * 70) + '%';
+                    box.style.top = (Math.random() * 60) + '%';
+                    view.appendChild(box);
+                }
+            });
+        }
+
+        // Initialize traffic map
+        function initTraffic() {
+            const map = document.getElementById('trafficMap');
+
+            // Create traffic nodes
+            const nodes = [
+                {x: 20, y: 20}, {x: 50, y: 20}, {x: 80, y: 20},
+                {x: 20, y: 50}, {x: 50, y: 50}, {x: 80, y: 50},
+                {x: 20, y: 80}, {x: 50, y: 80}, {x: 80, y: 80}
+            ];
+
+            nodes.forEach((node, i) => {
+                const div = document.createElement('div');
+                div.className = 'traffic-node';
+                div.style.left = node.x + '%';
+                div.style.top = node.y + '%';
+                div.textContent = i + 1;
+                div.title = `Junction ${i + 1}`;
+                map.appendChild(div);
+            });
+
+            // Create traffic lines
+            const connections = [[0,1], [1,2], [3,4], [4,5], [6,7], [7,8], [0,3], [3,6], [1,4], [4,7], [2,5], [5,8]];
+            connections.forEach(conn => {
+                const from = nodes[conn[0]];
+                const to = nodes[conn[1]];
+                const line = document.createElement('div');
+                line.className = 'traffic-line';
+
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const angle = Math.atan2(dy, dx);
+                const length = Math.sqrt(dx*dx + dy*dy);
+
+                line.style.left = from.x + '%';
+                line.style.top = from.y + '%';
+                line.style.width = length + '%';
+                line.style.transform = `rotate(${angle}rad)`;
+                map.appendChild(line);
+            });
+        }
+
+        // Initialize buildings
+        function initBuildings() {
+            const grid = document.getElementById('buildingGrid');
+            const buildings = [
+                { name: 'Nexus Tower', floors: 84, occupancy: 92, power: 'Normal' },
+                { name: 'Tech Plaza', floors: 56, occupancy: 88, power: 'Normal' },
+                { name: 'Harbor Center', floors: 67, occupancy: 95, power: 'High' },
+                { name: 'Sky Garden', floors: 42, occupancy: 78, power: 'Low' },
+                { name: 'Metro Mall', floors: 12, occupancy: 100, power: 'High' },
+                { name: 'Central Hospital', floors: 28, occupancy: 85, power: 'Critical' },
+                { name: 'University Hub', floors: 34, occupancy: 91, power: 'Normal' },
+                { name: 'Finance Tower', floors: 72, occupancy: 96, power: 'Normal' },
+                { name: 'Innovation Labs', floors: 48, occupancy: 82, power: 'High' },
+                { name: 'Residential Alpha', floors: 120, occupancy: 89, power: 'Normal' },
+                { name: 'Entertainment District', floors: 18, occupancy: 100, power: 'Very High' },
+                { name: 'Government Complex', floors: 38, occupancy: 75, power: 'Critical' }
+            ];
+
+            buildings.forEach(building => {
+                const card = document.createElement('div');
+                card.className = 'building-card';
+                card.innerHTML = `
+                    <div class="building-name">🏢 ${building.name}</div>
+                    <div class="building-stat">
+                        <span>Floors:</span>
+                        <span class="stat-value">${building.floors}</span>
+                    </div>
+                    <div class="building-stat">
+                        <span>Occupancy:</span>
+                        <span class="stat-value">${building.occupancy}%</span>
+                    </div>
+                    <div class="building-stat">
+                        <span>Power:</span>
+                        <span class="stat-value">${building.power}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Initialize crime feed
+        function initCrime() {
+            const feed = document.getElementById('crimeFeed');
+            const reports = [
+                { severity: 'high', type: 'Armed Robbery', location: 'Downtown Plaza, Sector 3', time: '21:45' },
+                { severity: 'medium', type: 'Vehicle Theft', location: 'Parking Garage 7B', time: '21:32' },
+                { severity: 'high', type: 'Assault', location: 'Park Avenue & 5th Street', time: '21:18' },
+                { severity: 'low', type: 'Vandalism', location: 'Metro Station North', time: '21:05' },
+                { severity: 'medium', type: 'Break-in', location: 'Tech District, Building 42', time: '20:47' },
+                { severity: 'high', type: 'Drug Operation', location: 'Harbor District Warehouse', time: '20:30' },
+                { severity: 'low', type: 'Noise Complaint', location: 'Residential Zone 8', time: '20:15' },
+                { severity: 'medium', type: 'Shoplifting', location: 'Central Mall', time: '19:58' }
+            ];
+
+            reports.forEach(report => {
+                const div = document.createElement('div');
+                div.className = 'crime-report';
+                div.innerHTML = `
+                    <div>
+                        <span class="crime-severity severity-${report.severity}">${report.severity.toUpperCase()}</span>
+                        <strong style="color: var(--neon-pink); margin-left: 10px;">${report.type}</strong>
+                    </div>
+                    <div class="crime-location">📍 ${report.location}</div>
+                    <div style="color: var(--text); font-size: 0.85em; margin-top: 8px;">⏰ ${report.time}</div>
+                `;
+                feed.appendChild(div);
+            });
+        }
+
+        // Initialize power grid
+        function initPowerGrid() {
+            const grid = document.getElementById('powerGrid');
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'power-cell';
+                if (Math.random() > 0.2) {
+                    cell.classList.add('active');
+                }
+                cell.onclick = () => cell.classList.toggle('active');
+                grid.appendChild(cell);
+            }
+        }
+
+        // Content switching
+        function showContent(id) {
+            document.querySelectorAll('.content-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize all systems
+        initCameras();
+        initTraffic();
+        initBuildings();
+        initCrime();
+        initPowerGrid();
+    </script>
+</body>
+</html>

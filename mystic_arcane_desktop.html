@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystic Arcane Desktop - Wizard's Workstation</title>
+    <meta name="description" content="Fantasy magic desktop with spellbook grimoire, potion brewing cauldron, crystal ball divination, rune casting, and enchantment forge">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --mystic-purple: #b366ff;
+            --arcane-gold: #ffd700;
+            --magic-blue: #00ffff;
+            --spell-pink: #ff66ff;
+            --bg-dark: #1a0033;
+            --bg-darker: #0d001a;
+            --text: #f0e6ff;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, var(--bg-darker) 0%, #2a0050 100%);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .magic-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--arcane-gold);
+            border-radius: 50%;
+            animation: float-particle 10s infinite ease-in-out;
+            box-shadow: 0 0 10px var(--arcane-gold);
+        }
+
+        @keyframes float-particle {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10%, 90% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-100vh) translateX(50px);
+            }
+        }
+
+        .desktop {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .arcane-header {
+            background: linear-gradient(180deg, rgba(179, 102, 255, 0.3) 0%, rgba(179, 102, 255, 0.1) 100%);
+            border-bottom: 3px solid var(--mystic-purple);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 30px rgba(179, 102, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .wizard-title {
+            font-size: 2em;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--mystic-purple) 0%, var(--arcane-gold) 50%, var(--spell-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px var(--mystic-purple);
+            font-family: 'Palatino', serif;
+        }
+
+        .mana-bar {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--mystic-purple);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 300px;
+        }
+
+        .mana-label {
+            color: var(--text);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .mana-gauge {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--mystic-purple);
+        }
+
+        .mana-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--mystic-purple) 0%, var(--spell-pink) 100%);
+            width: 87%;
+            animation: mana-pulse 3s infinite;
+            box-shadow: 0 0 15px var(--mystic-purple);
+        }
+
+        @keyframes mana-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .spell-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .spell-slot {
+            width: 50px;
+            height: 50px;
+            background: rgba(179, 102, 255, 0.2);
+            border: 2px solid var(--mystic-purple);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .spell-slot:hover {
+            background: rgba(179, 102, 255, 0.4);
+            box-shadow: 0 0 20px var(--mystic-purple);
+            transform: translateY(-5px);
+        }
+
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .grimoire-menu {
+            background: rgba(179, 102, 255, 0.1);
+            border: 3px solid var(--mystic-purple);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(179, 102, 255, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-title {
+            color: var(--arcane-gold);
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px var(--arcane-gold);
+        }
+
+        .tome-btn {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid var(--arcane-gold);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+            color: var(--text);
+            font-family: 'Georgia', serif;
+        }
+
+        .tome-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 25px var(--arcane-gold);
+            transform: translateX(5px);
+        }
+
+        .tome-btn.active {
+            background: rgba(179, 102, 255, 0.4);
+            border-color: var(--spell-pink);
+            box-shadow: 0 0 30px var(--spell-pink);
+        }
+
+        .spell-area {
+            display: none;
+        }
+
+        .spell-area.active {
+            display: block;
+            animation: materialize 0.5s;
+        }
+
+        @keyframes materialize {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .spellbook {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid var(--arcane-gold);
+            border-radius: 15px;
+            padding: 30px;
+            height: 600px;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+        }
+
+        .spell-entry {
+            background: rgba(179, 102, 255, 0.1);
+            border: 2px solid var(--mystic-purple);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .spell-entry:hover {
+            background: rgba(179, 102, 255, 0.2);
+            box-shadow: 0 0 25px rgba(179, 102, 255, 0.6);
+            transform: translateX(5px);
+        }
+
+        .spell-name {
+            color: var(--arcane-gold);
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--arcane-gold);
+        }
+
+        .spell-desc {
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .spell-cost {
+            color: var(--spell-pink);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .cauldron-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .cauldron-display {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid var(--mystic-purple);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .cauldron-icon {
+            font-size: 8em;
+            margin: 20px 0;
+            animation: bubble 2s infinite;
+        }
+
+        @keyframes bubble {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ingredient-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .ingredient {
+            aspect-ratio: 1;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid var(--arcane-gold);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 2em;
+        }
+
+        .ingredient:hover {
+            background: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 20px var(--arcane-gold);
+            transform: scale(1.1);
+        }
+
+        .crystal-ball {
+            width: 400px;
+            height: 400px;
+            margin: 30px auto;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.3) 0%, rgba(179, 102, 255, 0.1) 50%, transparent 70%);
+            border: 4px solid var(--magic-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 60px rgba(0, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vision {
+            font-size: 3em;
+            color: var(--magic-blue);
+            text-shadow: 0 0 30px var(--magic-blue);
+            animation: vision-pulse 4s infinite;
+        }
+
+        @keyframes vision-pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .rune-circle {
+            width: 500px;
+            height: 500px;
+            margin: 30px auto;
+            border-radius: 50%;
+            border: 4px solid var(--mystic-purple);
+            position: relative;
+            box-shadow: 0 0 40px rgba(179, 102, 255, 0.6);
+        }
+
+        .rune {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid var(--arcane-gold);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .rune:hover {
+            background: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 25px var(--arcane-gold);
+            transform: scale(1.3);
+        }
+
+        .enchant-forge {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .forge-slot {
+            background: rgba(179, 102, 255, 0.1);
+            border: 3px solid var(--mystic-purple);
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .forge-title {
+            color: var(--arcane-gold);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--arcane-gold);
+        }
+
+        .enchant-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--mystic-purple) 0%, var(--spell-pink) 100%);
+            border: 2px solid var(--arcane-gold);
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .enchant-btn:hover {
+            box-shadow: 0 0 30px var(--mystic-purple);
+            transform: scale(1.1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--mystic-purple);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="magic-particles" id="particles"></div>
+
+    <div class="desktop">
+        <div class="arcane-header">
+            <div class="wizard-title">✨ MYSTIC ARCANE WORKSTATION ✨</div>
+
+            <div class="mana-bar">
+                <div class="mana-label">Mana: 874 / 1000</div>
+                <div class="mana-gauge">
+                    <div class="mana-fill"></div>
+                </div>
+            </div>
+
+            <div class="spell-icons">
+                <div class="spell-slot" title="Fire Spell">🔥</div>
+                <div class="spell-slot" title="Ice Spell">❄️</div>
+                <div class="spell-slot" title="Lightning Spell">⚡</div>
+                <div class="spell-slot" title="Healing Spell">💚</div>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="grimoire-menu">
+                <div class="menu-title">📖 GRIMOIRE</div>
+                <div class="tome-btn active" onclick="showSpellArea('spellbook')">📜 Spellbook</div>
+                <div class="tome-btn" onclick="showSpellArea('potions')">🧪 Potions</div>
+                <div class="tome-btn" onclick="showSpellArea('divination')">🔮 Divination</div>
+                <div class="tome-btn" onclick="showSpellArea('runes')">⚡ Rune Casting</div>
+                <div class="tome-btn" onclick="showSpellArea('enchantments')">✨ Enchantments</div>
+                <div class="tome-btn" onclick="showSpellArea('library')">📚 Arcane Library</div>
+            </div>
+
+            <div id="mainArea">
+                <!-- Spellbook -->
+                <div class="spell-area active" id="spellbook">
+                    <h2 style="color: var(--arcane-gold); margin-bottom: 20px; text-align: center; font-size: 2em;">Ancient Spellbook</h2>
+                    <div class="spellbook" id="spellList"></div>
+                </div>
+
+                <!-- Potions -->
+                <div class="spell-area" id="potions">
+                    <h2 style="color: var(--mystic-purple); margin-bottom: 20px; text-align: center; font-size: 2em;">Potion Brewing</h2>
+                    <div class="cauldron-view">
+                        <div class="cauldron-display">
+                            <h3 style="color: var(--arcane-gold); margin-bottom: 20px;">Cauldron</h3>
+                            <div class="cauldron-icon">🧙</div>
+                            <p style="color: var(--text); margin-top: 20px;">Select ingredients to brew potions</p>
+                            <button class="enchant-btn" style="margin-top: 30px;">BREW POTION</button>
+                        </div>
+                        <div>
+                            <h3 style="color: var(--arcane-gold); margin-bottom: 20px; text-align: center;">Ingredients</h3>
+                            <div class="ingredient-grid" id="ingredientGrid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divination -->
+                <div class="spell-area" id="divination">
+                    <h2 style="color: var(--magic-blue); margin-bottom: 20px; text-align: center; font-size: 2em;">Crystal Ball Divination</h2>
+                    <div class="crystal-ball">
+                        <div class="vision" id="vision">🌙</div>
+                    </div>
+                    <p style="text-align: center; color: var(--text); margin-top: 30px; font-size: 1.2em;">
+                        "The stars whisper secrets of things yet to come..."
+                    </p>
+                </div>
+
+                <!-- Runes -->
+                <div class="spell-area" id="runes">
+                    <h2 style="color: var(--mystic-purple); margin-bottom: 20px; text-align: center; font-size: 2em;">Rune Casting Circle</h2>
+                    <div class="rune-circle" id="runeCircle"></div>
+                </div>
+
+                <!-- Enchantments -->
+                <div class="spell-area" id="enchantments">
+                    <h2 style="color: var(--spell-pink); margin-bottom: 20px; text-align: center; font-size: 2em;">Enchantment Forge</h2>
+                    <div class="enchant-forge">
+                        <div class="forge-slot">
+                            <div class="forge-title">⚔️ Weapon Enchantment</div>
+                            <div style="font-size: 4em; margin: 20px 0;">🗡️</div>
+                            <p style="color: var(--text); text-align: center;">Imbue weapons with magical properties</p>
+                            <button class="enchant-btn">ENCHANT</button>
+                        </div>
+                        <div class="forge-slot">
+                            <div class="forge-title">🛡️ Armor Enchantment</div>
+                            <div style="font-size: 4em; margin: 20px 0;">🛡️</div>
+                            <p style="color: var(--text); text-align: center;">Fortify armor with protective magic</p>
+                            <button class="enchant-btn">ENCHANT</button>
+                        </div>
+                        <div class="forge-slot">
+                            <div class="forge-title">💍 Jewelry Enchantment</div>
+                            <div style="font-size: 4em; margin: 20px 0;">💍</div>
+                            <p style="color: var(--text); text-align: center;">Craft mystical accessories</p>
+                            <button class="enchant-btn">ENCHANT</button>
+                        </div>
+                        <div class="forge-slot">
+                            <div class="forge-title">📿 Talisman Creation</div>
+                            <div style="font-size: 4em; margin: 20px 0;">📿</div>
+                            <p style="color: var(--text); text-align: center;">Create powerful talismans</p>
+                            <button class="enchant-btn">ENCHANT</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Library -->
+                <div class="spell-area" id="library">
+                    <h2 style="color: var(--arcane-gold); margin-bottom: 20px; text-align: center; font-size: 2em;">Arcane Library</h2>
+                    <div class="spellbook">
+                        <div class="spell-entry">
+                            <div class="spell-name">📚 Codex of Elements</div>
+                            <div class="spell-desc">Ancient tome containing the fundamental principles of elemental magic. Required reading for all aspiring mages.</div>
+                        </div>
+                        <div class="spell-entry">
+                            <div class="spell-name">📚 Historia Magicka</div>
+                            <div class="spell-desc">Comprehensive history of magical practice spanning 5,000 years across all known civilizations.</div>
+                        </div>
+                        <div class="spell-entry">
+                            <div class="spell-name">📚 Bestiary of Mystical Creatures</div>
+                            <div class="spell-desc">Detailed catalog of mythical beasts, their habitats, behaviors, and magical properties.</div>
+                        </div>
+                        <div class="spell-entry">
+                            <div class="spell-name">📚 Alchemy Fundamentals</div>
+                            <div class="spell-desc">Introduction to the transmutation of matter and creation of philosopher's stones.</div>
+                        </div>
+                        <div class="spell-entry">
+                            <div class="spell-name">📚 Dimensional Rifts & Portals</div>
+                            <div class="spell-desc">Advanced guide to creating stable passages between planes of existence.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create magic particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 40; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (Math.random() * 5 + 8) + 's';
+
+                const colors = ['#b366ff', '#ffd700', '#00ffff', '#ff66ff'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.boxShadow = `0 0 10px ${particle.style.background}`;
+
+                container.appendChild(particle);
+            }
+        }
+
+        // Initialize spellbook
+        function initSpellbook() {
+            const spells = [
+                { name: '🔥 Fireball', desc: 'Conjure a blazing sphere of fire that explodes on impact, dealing massive damage to enemies in a large radius.', cost: '50 Mana' },
+                { name: '❄️ Frost Nova', desc: 'Release a burst of freezing energy, slowing and damaging all nearby enemies while creating an icy barrier.', cost: '45 Mana' },
+                { name: '⚡ Chain Lightning', desc: 'Summon a bolt of lightning that arcs between multiple targets, growing stronger with each jump.', cost: '60 Mana' },
+                { name: '💚 Greater Healing', desc: 'Channel restorative magic to heal severe wounds and remove curses from the target.', cost: '70 Mana' },
+                { name: '🌪️ Tornado', desc: 'Create a violent whirlwind that lifts enemies into the air and scatters them across the battlefield.', cost: '80 Mana' },
+                { name: '🔮 Teleport', desc: 'Instantly transport yourself to any location within visual range or a previously marked destination.', cost: '55 Mana' },
+                { name: '✨ Invisibility', desc: 'Bend light around yourself to become completely invisible for a limited duration.', cost: '40 Mana' },
+                { name: '🌟 Meteor Storm', desc: 'Call down a rain of burning meteors from the heavens to devastate a wide area.', cost: '120 Mana' }
+            ];
+
+            const list = document.getElementById('spellList');
+            spells.forEach(spell => {
+                const entry = document.createElement('div');
+                entry.className = 'spell-entry';
+                entry.innerHTML = `
+                    <div class="spell-name">${spell.name}</div>
+                    <div class="spell-desc">${spell.desc}</div>
+                    <div class="spell-cost">Cost: ${spell.cost}</div>
+                `;
+                list.appendChild(entry);
+            });
+        }
+
+        // Initialize ingredients
+        function initIngredients() {
+            const grid = document.getElementById('ingredientGrid');
+            const ingredients = ['🌿', '🍄', '🦎', '💎', '🦴', '🌙', '⭐', '🔥', '💧'];
+
+            ingredients.forEach(icon => {
+                const ing = document.createElement('div');
+                ing.className = 'ingredient';
+                ing.textContent = icon;
+                grid.appendChild(ing);
+            });
+        }
+
+        // Initialize rune circle
+        function initRunes() {
+            const circle = document.getElementById('runeCircle');
+            const runes = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ'];
+
+            runes.forEach((rune, i) => {
+                const div = document.createElement('div');
+                div.className = 'rune';
+                div.textContent = rune;
+
+                const angle = (i / runes.length) * 2 * Math.PI - Math.PI / 2;
+                const radius = 210;
+                const x = Math.cos(angle) * radius + 220;
+                const y = Math.sin(angle) * radius + 220;
+
+                div.style.left = x + 'px';
+                div.style.top = y + 'px';
+
+                circle.appendChild(div);
+            });
+        }
+
+        // Vision animation
+        function animateVision() {
+            const vision = document.getElementById('vision');
+            const visions = ['🌙', '⭐', '☀️', '🔮', '✨', '💫'];
+            let index = 0;
+
+            setInterval(() => {
+                index = (index + 1) % visions.length;
+                vision.textContent = visions[index];
+            }, 3000);
+        }
+
+        // Module switching
+        function showSpellArea(id) {
+            document.querySelectorAll('.spell-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            document.querySelectorAll('.tome-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize
+        createParticles();
+        initSpellbook();
+        initIngredients();
+        initRunes();
+        animateVision();
+    </script>
+</body>
+</html>

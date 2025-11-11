@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Lab Station - Deep Sea Research Facility</title>
+    <meta name="description" content="Underwater research station with sonar mapping, marine biology lab, submarine controls, and deep ocean exploration">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --ocean-blue: #00b8d4;
+            --deep-blue: #0077be;
+            --teal: #00d9ff;
+            --coral: #ff6b9d;
+            --bg-dark: #0a1929;
+            --bg-darker: #051220;
+            --text: #c5e3f6;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: radial-gradient(ellipse at bottom, #0a1929 0%, #03050a 100%);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .ocean-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg,
+                rgba(0, 119, 190, 0.1) 0%,
+                rgba(0, 184, 212, 0.05) 50%,
+                rgba(0, 5, 10, 0.8) 100%);
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.3), transparent);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: -50px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 100vh;
+                opacity: 0;
+            }
+        }
+
+        .desktop {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(180deg, rgba(0, 184, 212, 0.3) 0%, rgba(0, 119, 190, 0.2) 100%);
+            border-bottom: 2px solid var(--ocean-blue);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 30px rgba(0, 184, 212, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .station-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--ocean-blue);
+            text-shadow: 0 0 20px var(--ocean-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .depth-indicator {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 20px;
+            border: 2px solid var(--deep-blue);
+            border-radius: 8px;
+            font-size: 1.2em;
+            color: var(--teal);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--teal);
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-value {
+            color: var(--teal);
+            font-weight: bold;
+        }
+
+        .main-area {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: rgba(0, 184, 212, 0.05);
+            border: 2px solid var(--ocean-blue);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 184, 212, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .module-btn {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(0, 119, 190, 0.2);
+            border: 2px solid var(--deep-blue);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .module-btn:hover {
+            background: rgba(0, 184, 212, 0.3);
+            box-shadow: 0 0 20px rgba(0, 184, 212, 0.6);
+            transform: translateX(5px);
+            border-color: var(--ocean-blue);
+        }
+
+        .module-btn.active {
+            background: rgba(0, 184, 212, 0.4);
+            border-color: var(--teal);
+            box-shadow: 0 0 25px rgba(0, 217, 255, 0.8);
+        }
+
+        .content-panel {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sonar-display {
+            width: 500px;
+            height: 500px;
+            margin: 20px auto;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.1) 0%, transparent 70%);
+            border: 3px solid var(--ocean-blue);
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 184, 212, 0.5);
+        }
+
+        .sonar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--teal) 0%, transparent 100%);
+            transform-origin: left center;
+            animation: sonar-rotate 4s linear infinite;
+            box-shadow: 0 0 10px var(--teal);
+        }
+
+        @keyframes sonar-rotate {
+            from { transform: translate(0, -50%) rotate(0deg); }
+            to { transform: translate(0, -50%) rotate(360deg); }
+        }
+
+        .sonar-ping {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: var(--coral);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--coral);
+            animation: ping-pulse 2s infinite;
+        }
+
+        @keyframes ping-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+
+        .creature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .creature-card {
+            background: rgba(0, 184, 212, 0.1);
+            border: 2px solid var(--deep-blue);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .creature-card:hover {
+            background: rgba(0, 184, 212, 0.2);
+            box-shadow: 0 0 25px rgba(0, 184, 212, 0.5);
+            transform: translateY(-5px);
+            border-color: var(--ocean-blue);
+        }
+
+        .creature-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .creature-name {
+            color: var(--ocean-blue);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .creature-info {
+            font-size: 0.85em;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .submarine-control {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--ocean-blue);
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 30px;
+            background: rgba(0, 184, 212, 0.2);
+            border: 2px solid var(--deep-blue);
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 184, 212, 0.4);
+            box-shadow: 0 0 20px rgba(0, 184, 212, 0.6);
+            transform: scale(1.05);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .pressure-gauge {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 50%;
+            border: 5px solid var(--ocean-blue);
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.1) 0%, transparent 70%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 184, 212, 0.5);
+        }
+
+        .pressure-value {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--teal);
+            text-shadow: 0 0 20px var(--teal);
+        }
+
+        .pressure-label {
+            position: absolute;
+            bottom: 50px;
+            font-size: 0.9em;
+            color: var(--text);
+        }
+
+        .research-log {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--deep-blue);
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            background: rgba(0, 184, 212, 0.1);
+            border-left: 4px solid var(--ocean-blue);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .log-timestamp {
+            color: var(--teal);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-panel {
+            background: rgba(0, 184, 212, 0.1);
+            border: 2px solid var(--deep-blue);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            color: var(--ocean-blue);
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .gauge-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--deep-blue);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--ocean-blue) 0%, var(--teal) 100%);
+            box-shadow: 0 0 15px var(--teal);
+            transition: width 0.5s;
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .specimen-view {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .specimen {
+            aspect-ratio: 1;
+            background: rgba(0, 184, 212, 0.1);
+            border: 2px solid var(--deep-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .specimen:hover {
+            background: rgba(0, 184, 212, 0.3);
+            box-shadow: 0 0 20px rgba(0, 184, 212, 0.6);
+            transform: scale(1.1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--ocean-blue);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="ocean-bg" id="oceanBg"></div>
+
+    <div class="desktop">
+        <div class="header">
+            <div class="station-title">
+                <span>🌊</span>
+                <span>OCEAN LAB STATION</span>
+            </div>
+            <div class="depth-indicator" id="depth">-2,847m</div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span>💨 O₂:</span>
+                    <span class="status-value">97%</span>
+                </div>
+                <div class="status-item">
+                    <span>🌡️ Temp:</span>
+                    <span class="status-value">18°C</span>
+                </div>
+                <div class="status-item">
+                    <span>⚡ Power:</span>
+                    <span class="status-value">89%</span>
+                </div>
+                <div class="status-item">
+                    <span>👥 Crew:</span>
+                    <span class="status-value">12/12</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="sidebar">
+                <h3 style="color: var(--ocean-blue); margin-bottom: 20px; text-align: center;">MODULES</h3>
+                <div class="module-btn active" onclick="showModule('sonar')">📡 Sonar Map</div>
+                <div class="module-btn" onclick="showModule('marine')">🐠 Marine Life</div>
+                <div class="module-btn" onclick="showModule('submarine')">🚤 Submarine</div>
+                <div class="module-btn" onclick="showModule('pressure')">🔧 Pressure Systems</div>
+                <div class="module-btn" onclick="showModule('research')">🔬 Research Lab</div>
+                <div class="module-btn" onclick="showModule('specimens')">🧪 Specimens</div>
+            </div>
+
+            <div id="mainContent">
+                <!-- Sonar Panel -->
+                <div class="content-panel active" id="sonar">
+                    <h2 style="color: var(--ocean-blue); margin-bottom: 20px;">Sonar Mapping System</h2>
+                    <div class="sonar-display" id="sonarDisplay">
+                        <div class="sonar-sweep"></div>
+                    </div>
+                    <div style="text-align: center; color: var(--text); margin-top: 20px;">
+                        Active Sonar • Range: 5km • 24 Objects Detected
+                    </div>
+                </div>
+
+                <!-- Marine Life Panel -->
+                <div class="content-panel" id="marine">
+                    <h2 style="color: var(--ocean-blue); margin-bottom: 20px;">Marine Biology Database</h2>
+                    <div class="creature-grid" id="creatureGrid"></div>
+                </div>
+
+                <!-- Submarine Panel -->
+                <div class="content-panel" id="submarine">
+                    <h2 style="color: var(--ocean-blue); margin-bottom: 20px;">Submarine Control Interface</h2>
+                    <div class="stats-grid">
+                        <div class="stat-panel">
+                            <div class="panel-title">Speed</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" style="width: 45%"></div>
+                                <div class="gauge-text">12 knots</div>
+                            </div>
+                        </div>
+                        <div class="stat-panel">
+                            <div class="panel-title">Battery</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" style="width: 78%"></div>
+                                <div class="gauge-text">78%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="submarine-control">
+                        <h3 style="color: var(--ocean-blue); margin-bottom: 15px; text-align: center;">Navigation Controls</h3>
+                        <div class="control-grid">
+                            <div class="control-btn">↖</div>
+                            <div class="control-btn">⬆<br><small>FORWARD</small></div>
+                            <div class="control-btn">↗</div>
+                            <div class="control-btn">⬅<br><small>PORT</small></div>
+                            <div class="control-btn" style="background: rgba(255, 107, 157, 0.2);">⬆<br><small>SURFACE</small></div>
+                            <div class="control-btn">➡<br><small>STARBOARD</small></div>
+                            <div class="control-btn">↙</div>
+                            <div class="control-btn">⬇<br><small>REVERSE</small></div>
+                            <div class="control-btn">↘</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pressure Panel -->
+                <div class="content-panel" id="pressure">
+                    <h2 style="color: var(--ocean-blue); margin-bottom: 20px;">Hull Pressure Systems</h2>
+                    <div class="pressure-gauge">
+                        <div class="pressure-value">284.7</div>
+                        <div class="pressure-label">atmospheres</div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-panel">
+                            <div class="panel-title">Hull Integrity</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" style="width: 98%"></div>
+                                <div class="gauge-text">98%</div>
+                            </div>
+                        </div>
+                        <div class="stat-panel">
+                            <div class="panel-title">Ballast Systems</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" style="width: 65%"></div>
+                                <div class="gauge-text">STABLE</div>
+                            </div>
+                        </div>
+                        <div class="stat-panel">
+                            <div class="panel-title">Oxygen Recycling</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" style="width: 94%"></div>
+                                <div class="gauge-text">94%</div>
+                            </div>
+                        </div>
+                        <div class="stat-panel">
+                            <div class="panel-title">Water Filtration</div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" style="width: 88%"></div>
+                                <div class="gauge-text">88%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Research Panel -->
+                <div class="content-panel" id="research">
+                    <h2 style="color: var(--ocean-blue); margin-bottom: 20px;">Research Log - Expedition Day 47</h2>
+                    <div class="research-log" id="researchLog"></div>
+                </div>
+
+                <!-- Specimens Panel -->
+                <div class="content-panel" id="specimens">
+                    <h2 style="color: var(--ocean-blue); margin-bottom: 20px;">Specimen Collection</h2>
+                    <p style="color: var(--text); margin-bottom: 20px;">
+                        24 unique specimens collected • 156 samples analyzed • 8 new species discovered
+                    </p>
+                    <div class="specimen-view" id="specimenView"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create bubbles
+        function createBubbles() {
+            const bg = document.getElementById('oceanBg');
+            for (let i = 0; i < 30; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.width = bubble.style.height = (Math.random() * 15 + 10) + 'px';
+                bubble.style.animationDelay = Math.random() * 10 + 's';
+                bubble.style.animationDuration = (Math.random() * 5 + 8) + 's';
+                bg.appendChild(bubble);
+            }
+        }
+
+        // Initialize sonar
+        function initSonar() {
+            const sonar = document.getElementById('sonarDisplay');
+            for (let i = 0; i < 24; i++) {
+                const ping = document.createElement('div');
+                ping.className = 'sonar-ping';
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 200 + 50;
+                ping.style.left = `calc(50% + ${Math.cos(angle) * distance}px)`;
+                ping.style.top = `calc(50% + ${Math.sin(angle) * distance}px)`;
+                ping.style.animationDelay = Math.random() * 2 + 's';
+                sonar.appendChild(ping);
+            }
+        }
+
+        // Initialize creatures
+        function initCreatures() {
+            const grid = document.getElementById('creatureGrid');
+            const creatures = [
+                { icon: '🐋', name: 'Humpback Whale', info: 'Length: 16m • Weight: 30t' },
+                { icon: '🦑', name: 'Giant Squid', info: 'Length: 13m • Depth: 1000m' },
+                { icon: '🐙', name: 'Deep Sea Octopus', info: 'Arms: 8 • Intelligence: High' },
+                { icon: '🐠', name: 'Anglerfish', info: 'Bioluminescent • Rare' },
+                { icon: '🦈', name: 'Great White Shark', info: 'Length: 6m • Apex Predator' },
+                { icon: '🐡', name: 'Pufferfish', info: 'Toxic • Defensive' },
+                { icon: '🦀', name: 'Giant Crab', info: 'Leg span: 4m • Scavenger' },
+                { icon: '🐢', name: 'Sea Turtle', info: 'Age: 80yr • Endangered' },
+                { icon: '🦭', name: 'Seal', info: 'Dive depth: 300m • Social' }
+            ];
+
+            creatures.forEach(creature => {
+                const card = document.createElement('div');
+                card.className = 'creature-card';
+                card.innerHTML = `
+                    <div class="creature-icon">${creature.icon}</div>
+                    <div class="creature-name">${creature.name}</div>
+                    <div class="creature-info">${creature.info}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Initialize research log
+        function initResearch() {
+            const log = document.getElementById('researchLog');
+            const entries = [
+                { time: '06:30', text: 'Discovered new species of bioluminescent jellyfish at 2,400m depth.' },
+                { time: '09:15', text: 'Collected water samples near hydrothermal vents. Temperature: 350°C.' },
+                { time: '11:45', text: 'Observed unprecedented whale song patterns. Recording for analysis.' },
+                { time: '14:20', text: 'Submarine encountered strong underwater current. Navigation adjusted.' },
+                { time: '16:00', text: 'Deployed autonomous underwater vehicle for trench mapping mission.' },
+                { time: '18:30', text: 'Analyzed microorganism samples from seabed. 47% unknown species.' },
+                { time: '20:15', text: 'Detected seismic activity 15km east. Monitoring for tsunami potential.' },
+                { time: '22:00', text: 'Night shift begins. Continuing sonar survey of unexplored sector 7G.' }
+            ];
+
+            entries.forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                div.innerHTML = `
+                    <div class="log-timestamp">${entry.time}</div>
+                    <div>${entry.text}</div>
+                `;
+                log.appendChild(div);
+            });
+        }
+
+        // Initialize specimens
+        function initSpecimens() {
+            const view = document.getElementById('specimenView');
+            const specimens = ['🦠', '🧫', '🦐', '🐚', '🪸', '🦑', '🐙', '🐡', '🦀', '🦞', '🦈', '🐠', '🐟', '🦭', '🐢', '🪼'];
+
+            specimens.forEach((icon, i) => {
+                const specimen = document.createElement('div');
+                specimen.className = 'specimen';
+                specimen.textContent = icon;
+                specimen.title = `Specimen ${i + 1}`;
+                view.appendChild(specimen);
+            });
+        }
+
+        // Module switching
+        function showModule(id) {
+            document.querySelectorAll('.content-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.querySelectorAll('.module-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Depth animation
+        function updateDepth() {
+            const depth = document.getElementById('depth');
+            setInterval(() => {
+                const current = parseInt(depth.textContent.replace(/[^0-9]/g, ''));
+                const change = Math.floor(Math.random() * 5) - 2;
+                const newDepth = Math.max(2800, Math.min(2900, current + change));
+                depth.textContent = `-${newDepth}m`;
+            }, 3000);
+        }
+
+        // Initialize all
+        createBubbles();
+        initSonar();
+        initCreatures();
+        initResearch();
+        initSpecimens();
+        updateDepth();
+    </script>
+</body>
+</html>

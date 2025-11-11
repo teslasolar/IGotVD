@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Station OS - Orbital Command Interface</title>
+    <meta name="description" content="Space station orbital command system with star maps, satellite tracking, mission control, and deep space communications">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00d4ff;
+            --secondary: #ff6b00;
+            --accent: #ffd700;
+            --bg-dark: #0a0e1a;
+            --bg-darker: #050810;
+            --text: #e0e0ff;
+            --border: rgba(0, 212, 255, 0.3);
+            --glow: rgba(0, 212, 255, 0.5);
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-darker);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #stars-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(circle at 50% 50%, #0a0e1a 0%, #000 100%);
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .desktop {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .taskbar {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+            border-top: 2px solid var(--primary);
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -5px 30px var(--glow);
+        }
+
+        .taskbar-left {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .station-logo {
+            font-size: 1.5em;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+            font-weight: bold;
+        }
+
+        .app-icons {
+            display: flex;
+            gap: 15px;
+            margin-left: 20px;
+        }
+
+        .app-icon {
+            padding: 8px 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .app-icon:hover {
+            background: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 15px var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .system-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: var(--primary);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .window {
+            position: absolute;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            box-shadow: 0 10px 50px rgba(0, 212, 255, 0.4);
+            display: none;
+            flex-direction: column;
+            min-width: 400px;
+            min-height: 300px;
+            backdrop-filter: blur(10px);
+        }
+
+        .window.active {
+            display: flex;
+        }
+
+        .window-header {
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.3) 0%, rgba(0, 212, 255, 0.1) 100%);
+            padding: 12px 15px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--primary);
+            user-select: none;
+        }
+
+        .window-title {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.1em;
+            text-shadow: 0 0 10px var(--glow);
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .window-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .btn-minimize { background: #ffd700; }
+        .btn-maximize { background: #00ff41; }
+        .btn-close { background: #ff4757; }
+
+        .window-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .star-map {
+            width: 100%;
+            height: 400px;
+            background: radial-gradient(circle, #1a1f3a 0%, #0a0e1a 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .star-object {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .star-object:hover {
+            transform: scale(2);
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .satellite-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .satellite-card {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .satellite-card:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        .satellite-name {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .satellite-status {
+            font-size: 0.85em;
+            color: var(--text);
+        }
+
+        .mission-log {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.8;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        .log-time {
+            color: var(--accent);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .life-support-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .system-panel {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            transition: width 0.5s;
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .comm-panel {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comm-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .comm-message {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--primary);
+            border-radius: 5px;
+        }
+
+        .comm-sender {
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .comm-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comm-input input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .comm-input button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .comm-input button:hover {
+            box-shadow: 0 0 15px var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .radar-display {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            border: 2px solid var(--primary);
+            position: relative;
+            margin: 20px auto;
+        }
+
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary) 0%, transparent 100%);
+            transform-origin: left center;
+            animation: radar-sweep 3s linear infinite;
+        }
+
+        @keyframes radar-sweep {
+            0% { transform: translate(0, -50%) rotate(0deg); }
+            100% { transform: translate(0, -50%) rotate(360deg); }
+        }
+
+        .radar-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .nav-button {
+            padding: 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .nav-button:hover {
+            background: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 20px var(--glow);
+            transform: translateY(-3px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="stars-bg"></div>
+
+    <div class="desktop">
+        <div class="taskbar">
+            <div class="taskbar-left">
+                <div class="station-logo">🛰️ STATION-OS</div>
+                <div class="app-icons">
+                    <div class="app-icon" onclick="openWindow('starMap')">🌌 Star Map</div>
+                    <div class="app-icon" onclick="openWindow('satellites')">📡 Satellites</div>
+                    <div class="app-icon" onclick="openWindow('lifeSupport')">💨 Life Support</div>
+                    <div class="app-icon" onclick="openWindow('communications')">📻 Comms</div>
+                    <div class="app-icon" onclick="openWindow('radar')">📊 Radar</div>
+                    <div class="app-icon" onclick="openWindow('navigation')">🧭 Navigation</div>
+                    <div class="app-icon" onclick="openWindow('missionLog')">📋 Mission Log</div>
+                </div>
+            </div>
+            <div class="system-stats">
+                <div class="stat-item">
+                    <span>ORBIT:</span>
+                    <span class="stat-value" id="orbit">408 KM</span>
+                </div>
+                <div class="stat-item">
+                    <span>SPEED:</span>
+                    <span class="stat-value" id="speed">7.66 km/s</span>
+                </div>
+                <div class="stat-item">
+                    <span>CREW:</span>
+                    <span class="stat-value">6/6</span>
+                </div>
+                <div class="stat-item">
+                    <span>TIME:</span>
+                    <span class="stat-value" id="clock">00:00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Star Map Window -->
+        <div class="window" id="starMap" style="top: 50px; left: 50px; width: 700px; height: 550px;">
+            <div class="window-header">
+                <span class="window-title">🌌 Star Map - Sector 7G</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('starMap')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('starMap')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('starMap')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="star-map" id="starMapCanvas"></div>
+                <div style="margin-top: 15px; text-align: center; color: var(--accent);">
+                    Click stars for detailed analysis • Showing 50 celestial objects
+                </div>
+            </div>
+        </div>
+
+        <!-- Satellites Window -->
+        <div class="window" id="satellites" style="top: 80px; left: 200px; width: 750px; height: 600px;">
+            <div class="window-header">
+                <span class="window-title">📡 Satellite Control Network</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('satellites')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('satellites')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('satellites')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="satelliteGrid" class="satellite-grid"></div>
+            </div>
+        </div>
+
+        <!-- Life Support Window -->
+        <div class="window" id="lifeSupport" style="top: 100px; left: 300px; width: 700px; height: 600px;">
+            <div class="window-header">
+                <span class="window-title">💨 Life Support Systems</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('lifeSupport')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('lifeSupport')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('lifeSupport')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="life-support-grid">
+                    <div class="system-panel">
+                        <div class="panel-title">Oxygen Level</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 98%"></div>
+                            <div class="progress-text">98%</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.85em;">Status: OPTIMAL</div>
+                    </div>
+                    <div class="system-panel">
+                        <div class="panel-title">Temperature</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 72%"></div>
+                            <div class="progress-text">22°C</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.85em;">Status: STABLE</div>
+                    </div>
+                    <div class="system-panel">
+                        <div class="panel-title">Power Output</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%"></div>
+                            <div class="progress-text">85 kW</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.85em;">Status: NORMAL</div>
+                    </div>
+                    <div class="system-panel">
+                        <div class="panel-title">Water Reserves</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 76%"></div>
+                            <div class="progress-text">76%</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.85em;">Status: SUFFICIENT</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communications Window -->
+        <div class="window" id="communications" style="top: 120px; left: 400px; width: 600px; height: 500px;">
+            <div class="window-header">
+                <span class="window-title">📻 Deep Space Communications</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('communications')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('communications')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('communications')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="comm-panel">
+                    <div class="comm-messages" id="commMessages"></div>
+                    <div class="comm-input">
+                        <input type="text" id="commInput" placeholder="Type message to ground control...">
+                        <button onclick="sendMessage()">SEND</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Radar Window -->
+        <div class="window" id="radar" style="top: 140px; left: 500px; width: 500px; height: 500px;">
+            <div class="window-header">
+                <span class="window-title">📊 Proximity Radar</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('radar')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('radar')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('radar')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="radar-display" id="radarDisplay">
+                    <div class="radar-sweep"></div>
+                </div>
+                <div style="text-align: center; margin-top: 15px; color: var(--accent);">
+                    Scanning 500km radius • 8 objects detected
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Window -->
+        <div class="window" id="navigation" style="top: 160px; left: 600px; width: 600px; height: 500px;">
+            <div class="window-header">
+                <span class="window-title">🧭 Orbital Navigation</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('navigation')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('navigation')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('navigation')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <h3 style="color: var(--primary); margin-bottom: 15px;">Current Position</h3>
+                <div style="background: rgba(0,212,255,0.05); padding: 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 8px;">Latitude: <span style="color: var(--accent);">51.5074° N</span></div>
+                    <div style="margin-bottom: 8px;">Longitude: <span style="color: var(--accent);">0.1278° W</span></div>
+                    <div style="margin-bottom: 8px;">Altitude: <span style="color: var(--accent);">408 km</span></div>
+                    <div>Velocity: <span style="color: var(--accent);">27,600 km/h</span></div>
+                </div>
+                <h3 style="color: var(--primary); margin-bottom: 15px;">Thruster Controls</h3>
+                <div class="navigation-grid">
+                    <div class="nav-button">↖ NW</div>
+                    <div class="nav-button">⬆ N</div>
+                    <div class="nav-button">↗ NE</div>
+                    <div class="nav-button">⬅ W</div>
+                    <div class="nav-button" style="background: rgba(255,107,0,0.2); border-color: var(--secondary);">⊙ CENTER</div>
+                    <div class="nav-button">➡ E</div>
+                    <div class="nav-button">↙ SW</div>
+                    <div class="nav-button">⬇ S</div>
+                    <div class="nav-button">↘ SE</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Log Window -->
+        <div class="window" id="missionLog" style="top: 180px; left: 700px; width: 650px; height: 450px;">
+            <div class="window-header">
+                <span class="window-title">📋 Mission Log - Day 142</span>
+                <div class="window-controls">
+                    <div class="window-btn btn-minimize" onclick="minimizeWindow('missionLog')"></div>
+                    <div class="window-btn btn-maximize" onclick="maximizeWindow('missionLog')"></div>
+                    <div class="window-btn btn-close" onclick="closeWindow('missionLog')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="mission-log" id="missionLogContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize star background
+        function createStars() {
+            const bg = document.getElementById('stars-bg');
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                bg.appendChild(star);
+            }
+        }
+
+        // Initialize star map
+        function initStarMap() {
+            const map = document.getElementById('starMapCanvas');
+            const colors = ['#00d4ff', '#ff6b00', '#ffd700', '#ff0080', '#00ff41'];
+
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star-object';
+                star.style.left = Math.random() * 95 + '%';
+                star.style.top = Math.random() * 95 + '%';
+                star.style.background = colors[Math.floor(Math.random() * colors.length)];
+                star.title = `Star ${i + 1}`;
+                map.appendChild(star);
+            }
+        }
+
+        // Initialize satellites
+        function initSatellites() {
+            const grid = document.getElementById('satelliteGrid');
+            const satellites = [
+                { name: 'HUBBLE-1', status: 'ACTIVE', signal: '98%' },
+                { name: 'GPS-SAT-42', status: 'ACTIVE', signal: '100%' },
+                { name: 'COMM-RELAY-7', status: 'STANDBY', signal: '87%' },
+                { name: 'WEATHER-SAT', status: 'ACTIVE', signal: '94%' },
+                { name: 'SPY-SAT-12', status: 'CLASSIFIED', signal: '??%' },
+                { name: 'ISS-LINK', status: 'ACTIVE', signal: '100%' },
+                { name: 'DEEP-SCAN-3', status: 'SCANNING', signal: '76%' },
+                { name: 'PROBE-VOYAGER', status: 'DISTANT', signal: '12%' },
+                { name: 'MARS-ORBITER', status: 'ACTIVE', signal: '65%' }
+            ];
+
+            satellites.forEach(sat => {
+                const card = document.createElement('div');
+                card.className = 'satellite-card';
+                card.innerHTML = `
+                    <div class="satellite-name">${sat.name}</div>
+                    <div class="satellite-status">Status: ${sat.status}</div>
+                    <div class="satellite-status">Signal: ${sat.signal}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Initialize communications
+        function initComms() {
+            const messages = document.getElementById('commMessages');
+            const comms = [
+                { sender: 'GROUND CONTROL', text: 'Station, this is Houston. All systems nominal.' },
+                { sender: 'COMMANDER', text: 'Copy that Houston. Proceeding with scheduled EVA.' },
+                { sender: 'GROUND CONTROL', text: 'Roger. Weather conditions optimal for external repairs.' },
+                { sender: 'FLIGHT ENGINEER', text: 'Solar panel alignment complete. Power at 85%.' }
+            ];
+
+            comms.forEach(comm => {
+                const msg = document.createElement('div');
+                msg.className = 'comm-message';
+                msg.innerHTML = `
+                    <div class="comm-sender">${comm.sender}</div>
+                    <div>${comm.text}</div>
+                `;
+                messages.appendChild(msg);
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('commInput');
+            const messages = document.getElementById('commMessages');
+
+            if (input.value.trim()) {
+                const msg = document.createElement('div');
+                msg.className = 'comm-message';
+                msg.innerHTML = `
+                    <div class="comm-sender">YOU</div>
+                    <div>${input.value}</div>
+                `;
+                messages.appendChild(msg);
+                messages.scrollTop = messages.scrollHeight;
+                input.value = '';
+            }
+        }
+
+        // Initialize radar dots
+        function initRadar() {
+            const radar = document.getElementById('radarDisplay');
+            for (let i = 0; i < 8; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'radar-dot';
+                const angle = (Math.PI * 2 * i) / 8;
+                const distance = 80 + Math.random() * 60;
+                dot.style.left = `calc(50% + ${Math.cos(angle) * distance}px)`;
+                dot.style.top = `calc(50% + ${Math.sin(angle) * distance}px)`;
+                radar.appendChild(dot);
+            }
+        }
+
+        // Initialize mission log
+        function initMissionLog() {
+            const log = document.getElementById('missionLogContent');
+            const entries = [
+                { time: '08:30', text: 'Morning systems check completed. All nominal.' },
+                { time: '10:15', text: 'Docking procedure initiated with supply capsule.' },
+                { time: '11:45', text: 'Solar panel maintenance completed ahead of schedule.' },
+                { time: '14:00', text: 'Science experiments batch-07 processed successfully.' },
+                { time: '16:30', text: 'Communications test with deep space network - SUCCESS.' },
+                { time: '18:00', text: 'Evening crew briefing completed.' },
+                { time: '19:45', text: 'Detected minor debris field at 500km. Adjusted trajectory.' },
+                { time: '21:00', text: 'Night shift begins. Station secured for minimal operations.' }
+            ];
+
+            entries.forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                div.innerHTML = `<span class="log-time">${entry.time}</span>${entry.text}`;
+                log.appendChild(div);
+            });
+        }
+
+        // Window management
+        function openWindow(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeWindow(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function minimizeWindow(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function maximizeWindow(id) {
+            const win = document.getElementById(id);
+            win.style.width = '90vw';
+            win.style.height = '85vh';
+            win.style.top = '20px';
+            win.style.left = '5vw';
+        }
+
+        // Draggable windows
+        let draggedElement = null;
+        let offsetX, offsetY;
+
+        document.querySelectorAll('.window-header').forEach(header => {
+            header.addEventListener('mousedown', function(e) {
+                draggedElement = this.parentElement;
+                const rect = draggedElement.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                draggedElement.style.zIndex = 1000;
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (draggedElement) {
+                draggedElement.style.left = (e.clientX - offsetX) + 'px';
+                draggedElement.style.top = (e.clientY - offsetY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (draggedElement) {
+                draggedElement.style.zIndex = 100;
+                draggedElement = null;
+            }
+        });
+
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toTimeString().split(' ')[0];
+        }
+
+        // Initialize
+        createStars();
+        initStarMap();
+        initSatellites();
+        initComms();
+        initRadar();
+        initMissionLog();
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Open star map by default
+        openWindow('starMap');
+    </script>
+</body>
+</html>

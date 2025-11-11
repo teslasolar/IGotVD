@@ -40,11 +40,50 @@
       ]
     },
     {
+      "name": "Mystic Arcane Desktop - Wizard's Workstation",
+      "file": "mystic_arcane_desktop.html",
+      "icon": "🧠",
+      "theme": "neural",
+      "description": "Fantasy magic desktop with spellbook grimoire, potion brewing cauldron, crystal ball divination, rune casting, and enchantment forge",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "Neon City Control - Urban Management System",
+      "file": "neon_city_control.html",
+      "icon": "🖥️",
+      "theme": "cyber",
+      "description": "Cyberpunk city management system with surveillance, traffic control, building automation, and crime monitoring",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
       "name": "NeuroNet Workspace - Neural Desktop v4.1",
       "file": "neuronet_workspace.html",
       "icon": "🧠",
       "theme": "neural",
       "description": "NeuroNet Workspace - Neural Desktop v4.1 - Interactive virtual desktop environment",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
+    },
+    {
+      "name": "Ocean Lab Station - Deep Sea Research Facility",
+      "file": "ocean_lab_station.html",
+      "icon": "💻",
+      "theme": "default",
+      "description": "Underwater research station with sonar mapping, marine biology lab, submarine controls, and deep ocean exploration",
       "features": [
         "Interactive windows",
         "Desktop environment",
@@ -77,7 +116,20 @@
         "Custom applications",
         "Theme styling"
       ]
+    },
+    {
+      "name": "Space Station OS - Orbital Command Interface",
+      "file": "space_station_os.html",
+      "icon": "🖥️",
+      "theme": "cyber",
+      "description": "Space station orbital command system with star maps, satellite tracking, mission control, and deep space communications",
+      "features": [
+        "Interactive windows",
+        "Desktop environment",
+        "Custom applications",
+        "Theme styling"
+      ]
     }
   ],
-  "generated": "2025-11-11T19:12:48.339Z"
+  "generated": "2025-11-11T19:23:43.533Z"
 }
