@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static API Demo - IGotVD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 100%);
+            color: #e0ffe0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00ff41;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px #00ff41;
+        }
+
+        .subtitle {
+            color: #00d4ff;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .section {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #00ff41;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #00ff41 0%, #39ff14 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0a0e1a;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        button:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .output {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+
+        .status-success {
+            background: #00ff41;
+            color: #0a0e1a;
+        }
+
+        .status-error {
+            background: #ff4757;
+            color: white;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            color: #e0ffe0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+        }
+
+        .desktop-card {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .desktop-card h3 {
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid #00d4ff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #00d4ff;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 Static API Demo</h1>
+        <p class="subtitle">Client-side API for GitHub Pages - No Server Needed!</p>
+
+        <!-- Health Check -->
+        <div class="section">
+            <h2>🏥 Health & Info</h2>
+            <div class="button-grid">
+                <button onclick="testHealth()">GET /api/health</button>
+                <button onclick="testInfo()">GET /api/info</button>
+                <button onclick="testStats()">GET /api/stats</button>
+            </div>
+            <div id="health-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Desktop Management -->
+        <div class="section">
+            <h2>🖥️ Desktop Management</h2>
+            <div class="button-grid">
+                <button onclick="testGetDesktops()">GET /api/desktops</button>
+                <button onclick="testGetManifest()">GET /api/manifest</button>
+                <button onclick="testGetThemes()">GET /api/themes</button>
+            </div>
+            <input type="text" id="desktop-name" placeholder="Desktop name (e.g., cyber, space)">
+            <button onclick="testGetDesktop()">GET /api/desktops/:name</button>
+            <div id="desktop-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Search -->
+        <div class="section">
+            <h2>🔍 Search</h2>
+            <input type="text" id="search-query" placeholder="Search query (e.g., cyberpunk, quantum)">
+            <button onclick="testSearch()">GET /api/search?q=query</button>
+            <div id="search-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Favorites -->
+        <div class="section">
+            <h2>⭐ Favorites (localStorage)</h2>
+            <div class="button-grid">
+                <button onclick="testGetFavorites()">GET /api/favorites</button>
+                <button onclick="testAddFavorite()">POST /api/favorites/add</button>
+                <button onclick="testRemoveFavorite()">POST /api/favorites/remove</button>
+            </div>
+            <input type="text" id="favorite-name" placeholder="Desktop name">
+            <div id="favorites-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Recent -->
+        <div class="section">
+            <h2>🕒 Recent (localStorage)</h2>
+            <div class="button-grid">
+                <button onclick="testGetRecent()">GET /api/recent</button>
+                <button onclick="testAddRecent()">POST /api/recent/add</button>
+            </div>
+            <input type="text" id="recent-name" placeholder="Desktop name">
+            <div id="recent-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Settings -->
+        <div class="section">
+            <h2>⚙️ Settings (localStorage)</h2>
+            <div class="button-grid">
+                <button onclick="testGetSettings()">GET /api/settings</button>
+                <button onclick="testSaveSettings()">POST /api/settings/save</button>
+            </div>
+            <div id="settings-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="section">
+            <h2>💾 Data Management</h2>
+            <div class="button-grid">
+                <button onclick="testExportData()">Export Data</button>
+                <button onclick="testClearCache()">Clear Cache</button>
+                <button onclick="testClearAll()">Clear All Data</button>
+            </div>
+            <div id="data-output" class="output" style="display: none;"></div>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div class="section">
+            <h2>📊 Live Statistics</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-desktops">-</div>
+                    <div class="stat-label">Total Desktops</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-favorites">-</div>
+                    <div class="stat-label">Favorites</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-recent">-</div>
+                    <div class="stat-label">Recent</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-storage">-</div>
+                    <div class="stat-label">Storage (KB)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Static API -->
+    <script src="src/js/static-api.js"></script>
+
+    <script>
+        // Helper to display output
+        function showOutput(elementId, data, success = true) {
+            const output = document.getElementById(elementId);
+            output.style.display = 'block';
+            output.innerHTML = `
+                <span class="status ${success ? 'status-success' : 'status-error'}">
+                    ${success ? '✓ SUCCESS' : '✗ ERROR'}
+                </span>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        // Health & Info Tests
+        async function testHealth() {
+            const data = await api.getHealth();
+            showOutput('health-output', data);
+            updateStats();
+        }
+
+        async function testInfo() {
+            const data = await api.getInfo();
+            showOutput('health-output', data);
+        }
+
+        async function testStats() {
+            const data = await api.getStats();
+            showOutput('health-output', data);
+            updateStats();
+        }
+
+        // Desktop Tests
+        async function testGetDesktops() {
+            try {
+                const data = await api.getDesktops();
+                showOutput('desktop-output', data);
+                updateStats();
+            } catch (error) {
+                showOutput('desktop-output', { error: error.message }, false);
+            }
+        }
+
+        async function testGetManifest() {
+            try {
+                const data = await api.getManifest();
+                showOutput('desktop-output', data);
+            } catch (error) {
+                showOutput('desktop-output', { error: error.message }, false);
+            }
+        }
+
+        async function testGetDesktop() {
+            const name = document.getElementById('desktop-name').value || 'cyber';
+            try {
+                const data = await api.getDesktop(name);
+                showOutput('desktop-output', data);
+            } catch (error) {
+                showOutput('desktop-output', { error: error.message }, false);
+            }
+        }
+
+        async function testGetThemes() {
+            try {
+                const data = await api.getThemes();
+                showOutput('desktop-output', data);
+            } catch (error) {
+                showOutput('desktop-output', { error: error.message }, false);
+            }
+        }
+
+        // Search Test
+        async function testSearch() {
+            const query = document.getElementById('search-query').value || 'cyber';
+            try {
+                const data = await api.search(query);
+                showOutput('search-output', data);
+            } catch (error) {
+                showOutput('search-output', { error: error.message }, false);
+            }
+        }
+
+        // Favorites Tests
+        function testGetFavorites() {
+            const data = { favorites: api.getFavorites() };
+            showOutput('favorites-output', data);
+            updateStats();
+        }
+
+        async function testAddFavorite() {
+            const name = document.getElementById('favorite-name').value || 'cyber';
+            const data = await api.addFavorite(name);
+            showOutput('favorites-output', data);
+            updateStats();
+        }
+
+        async function testRemoveFavorite() {
+            const name = document.getElementById('favorite-name').value || 'cyber';
+            const data = await api.removeFavorite(name);
+            showOutput('favorites-output', data);
+            updateStats();
+        }
+
+        // Recent Tests
+        function testGetRecent() {
+            const data = { recent: api.getRecent() };
+            showOutput('recent-output', data);
+            updateStats();
+        }
+
+        async function testAddRecent() {
+            const name = document.getElementById('recent-name').value || 'cyber';
+            const data = await api.addRecent(name);
+            showOutput('recent-output', data);
+            updateStats();
+        }
+
+        // Settings Tests
+        function testGetSettings() {
+            const data = { settings: api.getSettings() };
+            showOutput('settings-output', data);
+        }
+
+        async function testSaveSettings() {
+            const settings = {
+                theme: 'dark',
+                defaultDesktop: 'cyber',
+                autoSave: true,
+                notifications: true
+            };
+            const data = await api.saveSettings(settings);
+            showOutput('settings-output', data);
+        }
+
+        // Data Management Tests
+        function testExportData() {
+            const data = api.exportData();
+            showOutput('data-output', data);
+
+            // Also download as file
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'igotvd-data.json';
+            a.click();
+        }
+
+        function testClearCache() {
+            api.clearCache();
+            showOutput('data-output', { message: 'Cache cleared successfully' });
+            updateStats();
+        }
+
+        function testClearAll() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                const data = api.clearAllData();
+                showOutput('data-output', data);
+                updateStats();
+            }
+        }
+
+        // Update live statistics
+        async function updateStats() {
+            try {
+                const stats = await api.getStats();
+                document.getElementById('stat-desktops').textContent = stats.totalDesktops;
+                document.getElementById('stat-favorites').textContent = stats.favoritesCount;
+                document.getElementById('stat-recent').textContent = stats.recentCount;
+                document.getElementById('stat-storage').textContent = stats.storageUsed + ' KB';
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        // Initialize
+        console.log('🚀 Static API Demo Ready!');
+        console.log('Try the buttons above or use the console:');
+        console.log('  api.getDesktops()');
+        console.log('  api.search("cyber")');
+        console.log('  api.addFavorite("space")');
+
+        // Load initial stats
+        updateStats();
+    </script>
+</body>
+</html>
