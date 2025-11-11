@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGotVD Modular System Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e1a;
+            color: #e0ffe0;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00ff41;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px #00ff41;
+        }
+
+        .test-section {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-section h2 {
+            color: #00ff41;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .test-button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #00ff41 0%, #39ff14 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0a0e1a;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .test-button:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            border-left: 4px solid #00ff41;
+            font-size: 0.9em;
+        }
+
+        .result-pass {
+            border-left-color: #00ff41;
+            color: #00ff41;
+        }
+
+        .result-fail {
+            border-left-color: #ff4757;
+            color: #ff4757;
+        }
+
+        .result-info {
+            border-left-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-pass {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        .status-fail {
+            background: #ff4757;
+            box-shadow: 0 0 10px #ff4757;
+        }
+
+        .status-pending {
+            background: #ffd700;
+            box-shadow: 0 0 10px #ffd700;
+        }
+
+        .link-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .link-box a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .link-box a:hover {
+            background: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+            transform: scale(1.05);
+        }
+
+        #test-log {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+        }
+
+        .log-time {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 IGotVD Modular System Test Suite</h1>
+
+        <!-- File Structure Tests -->
+        <div class="test-section">
+            <h2>📁 File Structure Tests</h2>
+            <div class="test-grid">
+                <button class="test-button" onclick="testFile('desktop.html')">Test desktop.html</button>
+                <button class="test-button" onclick="testFile('src/css/core.css')">Test core.css</button>
+                <button class="test-button" onclick="testFile('src/css/components.css')">Test components.css</button>
+                <button class="test-button" onclick="testFile('src/js/core.js')">Test core.js</button>
+                <button class="test-button" onclick="testFile('src/modules/cyber.js')">Test cyber.js</button>
+                <button class="test-button" onclick="testFile('src/themes/cyber-theme.css')">Test cyber-theme.css</button>
+            </div>
+            <div id="file-results" class="test-result result-info" style="display: none;"></div>
+        </div>
+
+        <!-- Core JavaScript Tests -->
+        <div class="test-section">
+            <h2>⚙️ Core JavaScript Tests</h2>
+            <div class="test-grid">
+                <button class="test-button" onclick="testWindowManager()">Test WindowManager</button>
+                <button class="test-button" onclick="testNotificationManager()">Test NotificationManager</button>
+                <button class="test-button" onclick="testDesktopClass()">Test Desktop Base</button>
+                <button class="test-button" onclick="testUtilities()">Test Utilities</button>
+            </div>
+            <div id="core-results" class="test-result result-info" style="display: none;"></div>
+        </div>
+
+        <!-- Desktop Loader Tests -->
+        <div class="test-section">
+            <h2>🖥️ Desktop Loader Tests</h2>
+            <div class="test-grid">
+                <button class="test-button" onclick="testDesktopConfig()">Test Desktop Config</button>
+                <button class="test-button" onclick="testScriptLoader()">Test Script Loader</button>
+                <button class="test-button" onclick="testThemeSystem()">Test Theme System</button>
+            </div>
+            <div id="loader-results" class="test-result result-info" style="display: none;"></div>
+        </div>
+
+        <!-- Visual Tests -->
+        <div class="test-section">
+            <h2>🎨 Visual & Animation Tests</h2>
+            <div class="test-grid">
+                <button class="test-button" onclick="testAnimations()">Test CSS Animations</button>
+                <button class="test-button" onclick="testColors()">Test Theme Colors</button>
+                <button class="test-button" onclick="testResponsive()">Test Responsive Design</button>
+            </div>
+            <div id="visual-results" class="test-result result-info" style="display: none;"></div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="link-box">
+            <h3 style="color: #00d4ff; margin-bottom: 20px;">🚀 Quick Launch</h3>
+            <a href="desktop.html" target="_blank">Open Modular Desktop</a>
+            <a href="desktop.html?mode=cyber" target="_blank">Open CyberOS</a>
+            <a href="index.html" target="_blank">Desktop Collection</a>
+        </div>
+
+        <!-- Test Log -->
+        <div>
+            <h2 style="color: #00ff41; margin: 30px 0 15px 0;">📋 Test Log</h2>
+            <div id="test-log"></div>
+        </div>
+
+        <!-- Summary -->
+        <div class="test-section" style="margin-top: 30px;">
+            <h2>📊 Test Summary</h2>
+            <div id="test-summary" style="font-size: 1.2em; line-height: 2;">
+                <div><span class="status-indicator status-pending"></span> Total Tests: <strong id="total-tests">0</strong></div>
+                <div><span class="status-indicator status-pass"></span> Passed: <strong id="passed-tests" style="color: #00ff41;">0</strong></div>
+                <div><span class="status-indicator status-fail"></span> Failed: <strong id="failed-tests" style="color: #ff4757;">0</strong></div>
+                <div style="margin-top: 15px;">Pass Rate: <strong id="pass-rate" style="color: #00d4ff;">0%</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test counters
+        let totalTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('test-log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+
+            const time = new Date().toLocaleTimeString();
+            const colors = {
+                pass: '#00ff41',
+                fail: '#ff4757',
+                info: '#00d4ff'
+            };
+
+            entry.innerHTML = `<span class="log-time">${time}</span><span style="color: ${colors[type]}">${message}</span>`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateSummary() {
+            document.getElementById('total-tests').textContent = totalTests;
+            document.getElementById('passed-tests').textContent = passedTests;
+            document.getElementById('failed-tests').textContent = failedTests;
+
+            const rate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
+            document.getElementById('pass-rate').textContent = rate + '%';
+        }
+
+        function recordTest(passed) {
+            totalTests++;
+            if (passed) passedTests++;
+            else failedTests++;
+            updateSummary();
+        }
+
+        // File tests
+        async function testFile(path) {
+            log(`Testing file: ${path}`, 'info');
+
+            try {
+                const response = await fetch(path);
+                if (response.ok) {
+                    log(`✓ ${path} exists and loads`, 'pass');
+                    recordTest(true);
+
+                    const resultDiv = document.getElementById('file-results');
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'test-result result-pass';
+                    resultDiv.innerHTML = `<span class="status-indicator status-pass"></span> ${path} loaded successfully (${response.headers.get('content-length') || 'unknown'} bytes)`;
+                } else {
+                    throw new Error(`Status ${response.status}`);
+                }
+            } catch (error) {
+                log(`✗ ${path} failed: ${error.message}`, 'fail');
+                recordTest(false);
+
+                const resultDiv = document.getElementById('file-results');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'test-result result-fail';
+                resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> Failed to load ${path}: ${error.message}`;
+            }
+        }
+
+        // Core JavaScript tests
+        function testWindowManager() {
+            log('Testing WindowManager class...', 'info');
+
+            const resultDiv = document.getElementById('core-results');
+            resultDiv.style.display = 'block';
+
+            const tests = [];
+
+            // Test if IGotVD namespace exists
+            if (typeof IGotVD !== 'undefined') {
+                tests.push('IGotVD namespace exists');
+                log('✓ IGotVD namespace found', 'pass');
+                recordTest(true);
+            } else {
+                tests.push('IGotVD namespace MISSING');
+                log('✗ IGotVD namespace not found', 'fail');
+                recordTest(false);
+                resultDiv.className = 'test-result result-fail';
+                resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> IGotVD namespace not loaded. Load desktop.html first or include core.js`;
+                return;
+            }
+
+            // Test WindowManager
+            if (typeof IGotVD.WindowManager !== 'undefined') {
+                tests.push('WindowManager class exists');
+                log('✓ WindowManager class found', 'pass');
+                recordTest(true);
+
+                try {
+                    const wm = new IGotVD.WindowManager();
+                    tests.push('WindowManager instantiates');
+                    log('✓ WindowManager instantiated', 'pass');
+                    recordTest(true);
+                } catch (e) {
+                    tests.push('WindowManager instantiation FAILED: ' + e.message);
+                    log('✗ WindowManager failed to instantiate: ' + e.message, 'fail');
+                    recordTest(false);
+                }
+            } else {
+                tests.push('WindowManager class MISSING');
+                log('✗ WindowManager class not found', 'fail');
+                recordTest(false);
+            }
+
+            resultDiv.className = tests.some(t => t.includes('MISSING') || t.includes('FAILED')) ? 'test-result result-fail' : 'test-result result-pass';
+            resultDiv.innerHTML = `<span class="status-indicator ${resultDiv.className.includes('fail') ? 'status-fail' : 'status-pass'}"></span> ` + tests.join('<br>');
+        }
+
+        function testNotificationManager() {
+            log('Testing NotificationManager class...', 'info');
+
+            const resultDiv = document.getElementById('core-results');
+            resultDiv.style.display = 'block';
+
+            if (typeof IGotVD === 'undefined' || typeof IGotVD.NotificationManager === 'undefined') {
+                log('✗ NotificationManager class not found', 'fail');
+                recordTest(false);
+                resultDiv.className = 'test-result result-fail';
+                resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> NotificationManager not loaded`;
+                return;
+            }
+
+            try {
+                const nm = new IGotVD.NotificationManager();
+                log('✓ NotificationManager instantiated', 'pass');
+                recordTest(true);
+
+                resultDiv.className = 'test-result result-pass';
+                resultDiv.innerHTML = `<span class="status-indicator status-pass"></span> NotificationManager working correctly`;
+            } catch (e) {
+                log('✗ NotificationManager failed: ' + e.message, 'fail');
+                recordTest(false);
+                resultDiv.className = 'test-result result-fail';
+                resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> NotificationManager error: ${e.message}`;
+            }
+        }
+
+        function testDesktopClass() {
+            log('Testing Desktop base class...', 'info');
+
+            const resultDiv = document.getElementById('core-results');
+            resultDiv.style.display = 'block';
+
+            if (typeof IGotVD === 'undefined' || typeof IGotVD.Desktop === 'undefined') {
+                log('✗ Desktop class not found', 'fail');
+                recordTest(false);
+                resultDiv.className = 'test-result result-fail';
+                resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> Desktop class not loaded`;
+                return;
+            }
+
+            try {
+                // Can't instantiate abstract class directly, just check it exists
+                log('✓ Desktop base class exists', 'pass');
+                recordTest(true);
+
+                resultDiv.className = 'test-result result-pass';
+                resultDiv.innerHTML = `<span class="status-indicator status-pass"></span> Desktop base class available`;
+            } catch (e) {
+                log('✗ Desktop class error: ' + e.message, 'fail');
+                recordTest(false);
+                resultDiv.className = 'test-result result-fail';
+                resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> Desktop class error: ${e.message}`;
+            }
+        }
+
+        function testUtilities() {
+            log('Testing utility classes...', 'info');
+
+            const resultDiv = document.getElementById('core-results');
+            resultDiv.style.display = 'block';
+
+            const utilities = ['Clock', 'StatsMonitor'];
+            const results = [];
+
+            utilities.forEach(util => {
+                if (typeof IGotVD !== 'undefined' && typeof IGotVD[util] !== 'undefined') {
+                    log(`✓ ${util} class exists`, 'pass');
+                    recordTest(true);
+                    results.push(`${util}: ✓`);
+                } else {
+                    log(`✗ ${util} class not found`, 'fail');
+                    recordTest(false);
+                    results.push(`${util}: ✗`);
+                }
+            });
+
+            const allPass = results.every(r => r.includes('✓'));
+            resultDiv.className = allPass ? 'test-result result-pass' : 'test-result result-fail';
+            resultDiv.innerHTML = `<span class="status-indicator ${allPass ? 'status-pass' : 'status-fail'}"></span> ` + results.join(' | ');
+        }
+
+        function testDesktopConfig() {
+            log('Testing desktop configuration...', 'info');
+
+            const resultDiv = document.getElementById('loader-results');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result result-info';
+            resultDiv.innerHTML = `<span class="status-indicator status-pending"></span> Open desktop.html to test configuration`;
+
+            log('ℹ Desktop config test requires desktop.html to be loaded', 'info');
+        }
+
+        function testScriptLoader() {
+            log('Testing script loader...', 'info');
+
+            const resultDiv = document.getElementById('loader-results');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result result-info';
+            resultDiv.innerHTML = `<span class="status-indicator status-pending"></span> Open desktop.html to test dynamic script loading`;
+
+            log('ℹ Script loader test requires desktop.html to be loaded', 'info');
+        }
+
+        function testThemeSystem() {
+            log('Testing theme system...', 'info');
+
+            const resultDiv = document.getElementById('loader-results');
+            resultDiv.style.display = 'block';
+
+            // Test if we can load and parse CSS
+            fetch('src/themes/cyber-theme.css')
+                .then(response => response.text())
+                .then(css => {
+                    const hasThemeVars = css.includes('--primary') && css.includes('--primary-rgb');
+                    if (hasThemeVars) {
+                        log('✓ Theme CSS contains required variables', 'pass');
+                        recordTest(true);
+                        resultDiv.className = 'test-result result-pass';
+                        resultDiv.innerHTML = `<span class="status-indicator status-pass"></span> Theme system configured correctly`;
+                    } else {
+                        log('✗ Theme CSS missing required variables', 'fail');
+                        recordTest(false);
+                        resultDiv.className = 'test-result result-fail';
+                        resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> Theme CSS missing variables`;
+                    }
+                })
+                .catch(error => {
+                    log('✗ Failed to load theme CSS: ' + error.message, 'fail');
+                    recordTest(false);
+                    resultDiv.className = 'test-result result-fail';
+                    resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> Theme CSS load failed: ${error.message}`;
+                });
+        }
+
+        function testAnimations() {
+            log('Testing CSS animations...', 'info');
+
+            const resultDiv = document.getElementById('visual-results');
+            resultDiv.style.display = 'block';
+
+            fetch('src/css/core.css')
+                .then(response => response.text())
+                .then(css => {
+                    const animations = ['fadeIn', 'fadeOut', 'slideInUp', 'slideInDown', 'pulse', 'spin'];
+                    const found = animations.filter(anim => css.includes(`@keyframes ${anim}`));
+
+                    log(`✓ Found ${found.length}/${animations.length} animations`, found.length === animations.length ? 'pass' : 'fail');
+                    recordTest(found.length === animations.length);
+
+                    resultDiv.className = found.length === animations.length ? 'test-result result-pass' : 'test-result result-fail';
+                    resultDiv.innerHTML = `<span class="status-indicator ${found.length === animations.length ? 'status-pass' : 'status-fail'}"></span> Animations: ${found.join(', ')}`;
+                })
+                .catch(error => {
+                    log('✗ Animation test failed: ' + error.message, 'fail');
+                    recordTest(false);
+                });
+        }
+
+        function testColors() {
+            log('Testing theme colors...', 'info');
+
+            const resultDiv = document.getElementById('visual-results');
+            resultDiv.style.display = 'block';
+
+            fetch('src/themes/cyber-theme.css')
+                .then(response => response.text())
+                .then(css => {
+                    const requiredVars = ['--primary', '--primary-rgb', '--secondary', '--accent', '--bg-dark', '--text'];
+                    const found = requiredVars.filter(v => css.includes(v));
+
+                    log(`✓ Found ${found.length}/${requiredVars.length} color variables`, found.length === requiredVars.length ? 'pass' : 'fail');
+                    recordTest(found.length === requiredVars.length);
+
+                    resultDiv.className = found.length === requiredVars.length ? 'test-result result-pass' : 'test-result result-fail';
+                    resultDiv.innerHTML = `<span class="status-indicator ${found.length === requiredVars.length ? 'status-pass' : 'status-fail'}"></span> Color variables: ${found.length}/${requiredVars.length} defined`;
+                })
+                .catch(error => {
+                    log('✗ Color test failed: ' + error.message, 'fail');
+                    recordTest(false);
+                });
+        }
+
+        function testResponsive() {
+            log('Testing responsive design...', 'info');
+
+            const resultDiv = document.getElementById('visual-results');
+            resultDiv.style.display = 'block';
+
+            fetch('src/css/core.css')
+                .then(response => response.text())
+                .then(css => {
+                    const hasMediaQueries = css.includes('@media') && css.includes('max-width');
+
+                    if (hasMediaQueries) {
+                        log('✓ Responsive media queries found', 'pass');
+                        recordTest(true);
+                        resultDiv.className = 'test-result result-pass';
+                        resultDiv.innerHTML = `<span class="status-indicator status-pass"></span> Responsive design implemented`;
+                    } else {
+                        log('⚠ No responsive media queries found', 'fail');
+                        recordTest(false);
+                        resultDiv.className = 'test-result result-fail';
+                        resultDiv.innerHTML = `<span class="status-indicator status-fail"></span> Responsive design not found`;
+                    }
+                })
+                .catch(error => {
+                    log('✗ Responsive test failed: ' + error.message, 'fail');
+                    recordTest(false);
+                });
+        }
+
+        // Initialize
+        log('🧪 Test suite initialized', 'info');
+        log('Click buttons above to run tests', 'info');
+    </script>
+</body>
+</html>
