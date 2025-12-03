@@ -38,85 +38,16 @@
     <script>
         // Available desktops configuration
         const DESKTOPS = {
-            cyber: {
-                name: 'CyberOS',
-                icon: '🖥️',
-                description: 'Matrix-style cyberpunk terminal',
-                module: 'src/modules/cyber.js',
-                class: 'CyberDesktop'
-            },
-            neural: {
-                name: 'NeuroNet',
-                icon: '🧠',
-                description: 'AI/ML development environment',
-                module: 'src/modules/neural.js',
-                class: 'NeuralDesktop',
-                status: 'coming-soon'
-            },
-            quantum: {
-                name: 'QuantumOS',
-                icon: '⚛️',
-                description: 'Quantum computing interface',
-                module: 'src/modules/quantum.js',
-                class: 'QuantumDesktop',
-                status: 'coming-soon'
-            },
-            retro: {
-                name: 'RetroWave',
-                icon: '🌆',
-                description: '1980s vaporwave aesthetic',
-                module: 'src/modules/retro.js',
-                class: 'RetroDesktop',
-                status: 'coming-soon'
-            },
-            hacker: {
-                name: 'Hacker Terminal',
-                icon: '👾',
-                description: 'Elite security workstation',
-                module: 'src/modules/hacker.js',
-                class: 'HackerDesktop',
-                status: 'coming-soon'
-            },
-            biotech: {
-                name: 'BioTech Lab',
-                icon: '🧬',
-                description: 'Genetic computing interface',
-                module: 'src/modules/biotech.js',
-                class: 'BiotechDesktop',
-                status: 'coming-soon'
-            },
-            space: {
-                name: 'Space Station',
-                icon: '🛰️',
-                description: 'Orbital command interface',
-                module: 'src/modules/space.js',
-                class: 'SpaceDesktop',
-                status: 'coming-soon'
-            },
-            city: {
-                name: 'Neon City',
-                icon: '🌆',
-                description: 'Urban management system',
-                module: 'src/modules/city.js',
-                class: 'CityDesktop',
-                status: 'coming-soon'
-            },
-            ocean: {
-                name: 'Ocean Lab',
-                icon: '🌊',
-                description: 'Deep sea research station',
-                module: 'src/modules/ocean.js',
-                class: 'OceanDesktop',
-                status: 'coming-soon'
-            },
-            mystic: {
-                name: 'Mystic Arcane',
-                icon: '✨',
-                description: 'Fantasy wizard workstation',
-                module: 'src/modules/mystic.js',
-                class: 'MysticDesktop',
-                status: 'coming-soon'
-            }
+            cyber: { name: 'CyberOS', icon: '🖥️', description: 'Matrix-style cyberpunk terminal', module: 'src/modules/cyber.js', class: 'CyberDesktop' },
+            neural: { name: 'NeuroNet', icon: '🧠', description: 'AI/ML development environment', module: 'src/modules/neural.js', class: 'NeuralDesktop' },
+            quantum: { name: 'QuantumOS', icon: '⚛️', description: 'Quantum computing interface', module: 'src/modules/quantum.js', class: 'QuantumDesktop' },
+            retro: { name: 'RetroWave', icon: '🌆', description: '1980s vaporwave aesthetic', module: 'src/modules/retro.js', class: 'RetroDesktop' },
+            hacker: { name: 'Hacker Terminal', icon: '👾', description: 'Elite security workstation', module: 'src/modules/hacker.js', class: 'HackerDesktop' },
+            biotech: { name: 'BioTech Lab', icon: '🧬', description: 'Genetic computing interface', module: 'src/modules/biotech.js', class: 'BiotechDesktop' },
+            space: { name: 'Space Station', icon: '🛰️', description: 'Orbital command interface', module: 'src/modules/space.js', class: 'SpaceDesktop' },
+            city: { name: 'Neon City', icon: '🌆', description: 'Urban management system', module: 'src/modules/city.js', class: 'CityDesktop' },
+            ocean: { name: 'Ocean Lab', icon: '🌊', description: 'Deep sea research station', module: 'src/modules/ocean.js', class: 'OceanDesktop' },
+            mystic: { name: 'Mystic Arcane', icon: '✨', description: 'Fantasy wizard workstation', module: 'src/modules/mystic.js', class: 'MysticDesktop' }
         };
 
         let currentDesktop = null;
@@ -137,14 +68,9 @@
 
         // Load desktop module
         async function loadDesktop(mode) {
-            const config = DESKTOPS[mode];
+            let config = DESKTOPS[mode];
             if (!config) {
-                showError(`Desktop mode '${mode}' not found`);
-                return;
-            }
-
-            if (config.status === 'coming-soon') {
-                showError(`${config.name} is coming soon! For now, using CyberOS.`);
+                console.warn(`Desktop mode '${mode}' not found, using cyber`);
                 mode = 'cyber';
                 config = DESKTOPS.cyber;
             }
@@ -214,29 +140,9 @@
             Object.entries(DESKTOPS).forEach(([key, config]) => {
                 const btn = document.createElement('div');
                 btn.className = 'card';
-                btn.style.cursor = 'pointer';
-                btn.style.textAlign = 'center';
-                btn.style.padding = '20px';
-
-                if (config.status === 'coming-soon') {
-                    btn.style.opacity = '0.5';
-                    btn.style.cursor = 'not-allowed';
-                }
-
-                btn.innerHTML = `
-                    <div style="font-size: 3em; margin-bottom: 10px;">${config.icon}</div>
-                    <div style="font-weight: bold; margin-bottom: 5px; color: var(--primary);">${config.name}</div>
-                    <div style="font-size: 0.85em; color: var(--text);">${config.description}</div>
-                    ${config.status === 'coming-soon' ? '<div style="margin-top: 10px;"><span class="badge badge-warning">Coming Soon</span></div>' : ''}
-                `;
-
-                if (config.status !== 'coming-soon') {
-                    btn.onclick = () => {
-                        closeSwitcher();
-                        loadDesktop(key);
-                    };
-                }
-
+                btn.style.cssText = 'cursor:pointer;text-align:center;padding:20px';
+                btn.innerHTML = `<div style="font-size:3em;margin-bottom:10px">${config.icon}</div><div style="font-weight:bold;margin-bottom:5px;color:var(--primary)">${config.name}</div><div style="font-size:0.85em;color:var(--text)">${config.description}</div>`;
+                btn.onclick = () => { closeSwitcher(); loadDesktop(key); };
                 options.appendChild(btn);
             });
 

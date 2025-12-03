@@ -1,0 +1,9 @@
+/* Space Theme - Orbital Blue Style */
+:root[data-theme="space"] {
+    --primary: #00aaff; --primary-rgb: 0, 170, 255; --secondary: #0088cc;
+    --accent: #66ccff; --bg-dark: #0a0e14; --bg-darker: #050810;
+    --text: #e0f0ff; --border: rgba(0, 170, 255, 0.3); --glow: rgba(0, 170, 255, 0.5);
+}
+.star-field { position: fixed; inset: 0; background: radial-gradient(ellipse at bottom, #1a1a3a 0%, #000010 100%); }
+.space-star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }

@@ -1,0 +1,10 @@
+/* City Theme - Neon Urban Style */
+:root[data-theme="city"] {
+    --primary: #ff1493; --primary-rgb: 255, 20, 147; --secondary: #ff69b4;
+    --accent: #00ffff; --bg-dark: #0a0a14; --bg-darker: #05050a;
+    --text: #ffe0f0; --border: rgba(255, 20, 147, 0.3); --glow: rgba(255, 20, 147, 0.5);
+}
+.city-grid { position: fixed; inset: 0; background: linear-gradient(to top, rgba(255,20,147,0.1) 0%, transparent 50%); }
+.neon-glow { position: fixed; bottom: 0; left: 0; right: 0; height: 40%; background: linear-gradient(to top, rgba(255,20,147,0.2), transparent); }
+.city-light { position: absolute; width: 4px; height: 4px; background: var(--accent); animation: flicker 2s ease-in-out infinite; box-shadow: 0 0 10px var(--accent); }
+@keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }

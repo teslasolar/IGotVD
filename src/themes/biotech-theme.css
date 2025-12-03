@@ -1,0 +1,10 @@
+/* BioTech Theme - Genetic Green Style */
+:root[data-theme="biotech"] {
+    --primary: #00ff88; --primary-rgb: 0, 255, 136; --secondary: #00cc6a;
+    --accent: #66ffaa; --bg-dark: #0a140e; --bg-darker: #050a07;
+    --text: #e0fff0; --border: rgba(0, 255, 136, 0.3); --glow: rgba(0, 255, 136, 0.5);
+}
+.dna-helix { position: fixed; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(0,255,136,0.1) 0%, transparent 50%); }
+.cell-grid { position: fixed; inset: 0; background: radial-gradient(circle, rgba(0,255,136,0.05) 1px, transparent 1px); background-size: 30px 30px; }
+.bio-cell { position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary); border-radius: 50%; animation: divide 4s ease-in-out infinite; opacity: 0.5; }
+@keyframes divide { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); opacity: 0.8; } }

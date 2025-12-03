@@ -1,0 +1,9 @@
+/* Quantum Theme - Cyan Quantum Computing Style */
+:root[data-theme="quantum"] {
+    --primary: #00ffff; --primary-rgb: 0, 255, 255; --secondary: #00cccc;
+    --accent: #66ffff; --bg-dark: #0a0e14; --bg-darker: #050810;
+    --text: #e0ffff; --border: rgba(0, 255, 255, 0.3); --glow: rgba(0, 255, 255, 0.5);
+}
+.quantum-field { position: fixed; inset: 0; background: radial-gradient(ellipse at center, rgba(0,255,255,0.1) 0%, transparent 70%); }
+.qubit { position: absolute; width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: superposition 2s ease-in-out infinite; box-shadow: 0 0 15px var(--glow); }
+@keyframes superposition { 0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; } 50% { transform: scale(2) rotate(180deg); opacity: 1; } }
