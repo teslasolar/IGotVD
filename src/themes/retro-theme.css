@@ -1,0 +1,10 @@
+/* Retro Theme - 80s Vaporwave Style */
+:root[data-theme="retro"] {
+    --primary: #ff00ff; --primary-rgb: 255, 0, 255; --secondary: #ff6ec7;
+    --accent: #00ffff; --bg-dark: #1a0a1a; --bg-darker: #0d050d;
+    --text: #ffe0ff; --border: rgba(255, 0, 255, 0.3); --glow: rgba(255, 0, 255, 0.5);
+}
+.retro-grid { position: fixed; inset: 0; background: linear-gradient(transparent 0%, rgba(255,0,255,0.05) 50%, transparent 100%), linear-gradient(90deg, rgba(255,0,255,0.03) 1px, transparent 1px), linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px); background-size: 100% 100%, 40px 40px, 40px 40px; perspective: 500px; }
+.sun-glow { position: fixed; bottom: 20%; left: 50%; transform: translateX(-50%); width: 300px; height: 150px; background: linear-gradient(#ff6b35, #ff00ff); border-radius: 150px 150px 0 0; box-shadow: 0 0 100px #ff00ff; }
+.retro-star { position: absolute; width: 3px; height: 3px; background: white; border-radius: 50%; animation: twinkle 2s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
