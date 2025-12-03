@@ -10,7 +10,21 @@ const fs = require('fs');
 const path = require('path');
 
 // Files to exclude from desktop list
-const EXCLUDE_FILES = ['index.html', 'generate-manifest.js'];
+const EXCLUDE_FILES = ['index.html', 'generate-manifest.js', 'api-demo.html', 'desktop.html', 'test-modular.html'];
+
+// Mode mapping from filename to modular desktop mode
+const FILE_TO_MODE = {
+    'biotech_lab.html': 'biotech',
+    'cyberOS_desktop.html': 'cyber',
+    'hacker_terminal.html': 'hacker',
+    'mystic_arcane_desktop.html': 'mystic',
+    'neon_city_control.html': 'city',
+    'neuronet_workspace.html': 'neural',
+    'ocean_lab_station.html': 'ocean',
+    'quantum_desktop.html': 'quantum',
+    'retrowave_desktop.html': 'retro',
+    'space_station_os.html': 'space'
+};
 
 // Theme emoji mapping
 const THEME_ICONS = {
@@ -19,11 +33,19 @@ const THEME_ICONS = {
     'quantum': '⚛️',
     'retro': '🌆',
     'hacker': '👾',
-    'cube': '🧬',
-    'entropy': '⚖️',
-    'compiler': '🔮',
     'biotech': '🧬',
+    'space': '🛰️',
+    'city': '🌆',
+    'ocean': '🌊',
+    'mystic': '✨',
     'default': '💻'
+};
+
+// Mode to theme mapping (for proper theme assignment)
+const MODE_TO_THEME = {
+    'cyber': 'cyber', 'neural': 'neural', 'quantum': 'quantum', 'retro': 'retro',
+    'hacker': 'hacker', 'biotech': 'biotech', 'space': 'space', 'city': 'urban',
+    'ocean': 'ocean', 'mystic': 'magic'
 };
 
 function extractMetadata(htmlContent, filename) {
@@ -32,6 +54,7 @@ function extractMetadata(htmlContent, filename) {
         file: filename,
         icon: '💻',
         theme: 'default',
+        mode: FILE_TO_MODE[filename] || null,
         description: '',
         features: []
     };
@@ -55,11 +78,17 @@ function extractMetadata(htmlContent, filename) {
         'compiler': /compiler|emoji/i
     };
 
-    for (const [theme, pattern] of Object.entries(themePatterns)) {
-        if (pattern.test(htmlContent)) {
-            metadata.theme = theme;
-            metadata.icon = THEME_ICONS[theme] || THEME_ICONS.default;
-            break;
+    // If we have a mode mapping, use that for theme and icon
+    if (metadata.mode) {
+        metadata.theme = MODE_TO_THEME[metadata.mode] || metadata.mode;
+        metadata.icon = THEME_ICONS[metadata.mode] || THEME_ICONS.default;
+    } else {
+        for (const [theme, pattern] of Object.entries(themePatterns)) {
+            if (pattern.test(htmlContent)) {
+                metadata.theme = theme;
+                metadata.icon = THEME_ICONS[theme] || THEME_ICONS.default;
+                break;
+            }
         }
     }
 
