@@ -3,8 +3,9 @@
     {
       "name": "BioTech Lab OS - Genetic Computing Interface",
       "file": "biotech_lab.html",
-      "icon": "⚛️",
-      "theme": "quantum",
+      "icon": "🧬",
+      "theme": "biotech",
+      "mode": "biotech",
       "description": "BioTech Lab OS - Genetic Computing Interface - Interactive virtual desktop environment",
       "features": [
         "Interactive windows",
@@ -18,6 +19,7 @@
       "file": "cyberOS_desktop.html",
       "icon": "🖥️",
       "theme": "cyber",
+      "mode": "cyber",
       "description": "CyberOS v7.2 - Virtual Desktop - Interactive virtual desktop environment",
       "features": [
         "Interactive windows",
@@ -31,6 +33,7 @@
       "file": "hacker_terminal.html",
       "icon": "👾",
       "theme": "hacker",
+      "mode": "hacker",
       "description": "H4CK3R T3RM1N4L - Elite Access System - Interactive virtual desktop environment",
       "features": [
         "Interactive windows",
@@ -42,8 +45,9 @@
     {
       "name": "Mystic Arcane Desktop - Wizard's Workstation",
       "file": "mystic_arcane_desktop.html",
-      "icon": "🧠",
-      "theme": "neural",
+      "icon": "✨",
+      "theme": "magic",
+      "mode": "mystic",
       "description": "Fantasy magic desktop with spellbook grimoire, potion brewing cauldron, crystal ball divination, rune casting, and enchantment forge",
       "features": [
         "Interactive windows",
@@ -55,8 +59,9 @@
     {
       "name": "Neon City Control - Urban Management System",
       "file": "neon_city_control.html",
-      "icon": "🖥️",
-      "theme": "cyber",
+      "icon": "🌆",
+      "theme": "urban",
+      "mode": "city",
       "description": "Cyberpunk city management system with surveillance, traffic control, building automation, and crime monitoring",
       "features": [
         "Interactive windows",
@@ -70,6 +75,7 @@
       "file": "neuronet_workspace.html",
       "icon": "🧠",
       "theme": "neural",
+      "mode": "neural",
       "description": "NeuroNet Workspace - Neural Desktop v4.1 - Interactive virtual desktop environment",
       "features": [
         "Interactive windows",
@@ -81,8 +87,9 @@
     {
       "name": "Ocean Lab Station - Deep Sea Research Facility",
       "file": "ocean_lab_station.html",
-      "icon": "💻",
-      "theme": "default",
+      "icon": "🌊",
+      "theme": "ocean",
+      "mode": "ocean",
       "description": "Underwater research station with sonar mapping, marine biology lab, submarine controls, and deep ocean exploration",
       "features": [
         "Interactive windows",
@@ -96,6 +103,7 @@
       "file": "quantum_desktop.html",
       "icon": "⚛️",
       "theme": "quantum",
+      "mode": "quantum",
       "description": "QuantumOS - Superposition Desktop v3.0 - Interactive virtual desktop environment",
       "features": [
         "Interactive windows",
@@ -107,8 +115,9 @@
     {
       "name": "RetroWave OS - Virtual Desktop v2.0",
       "file": "retrowave_desktop.html",
-      "icon": "🖥️",
-      "theme": "cyber",
+      "icon": "🌆",
+      "theme": "retro",
+      "mode": "retro",
       "description": "RetroWave OS - Virtual Desktop v2.0 - Interactive virtual desktop environment",
       "features": [
         "Interactive windows",
@@ -120,8 +129,9 @@
     {
       "name": "Space Station OS - Orbital Command Interface",
       "file": "space_station_os.html",
-      "icon": "🖥️",
-      "theme": "cyber",
+      "icon": "🛰️",
+      "theme": "space",
+      "mode": "space",
       "description": "Space station orbital command system with star maps, satellite tracking, mission control, and deep space communications",
       "features": [
         "Interactive windows",
@@ -131,5 +141,5 @@
       ]
     }
   ],
-  "generated": "2025-11-11T19:23:43.533Z"
+  "generated": "2025-12-03T00:00:00.000Z"
 }

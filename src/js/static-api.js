@@ -99,7 +99,7 @@ class StaticAPI {
             desktops: manifest.desktops.map(desktop => ({
                 ...desktop,
                 url: `${this.baseURL}${desktop.file}`,
-                modularUrl: `${this.baseURL}desktop.html?mode=${this.getDesktopMode(desktop.file)}`
+                modularUrl: `${this.baseURL}desktop.html?mode=${desktop.mode || this.getDesktopMode(desktop.file)}`
             })),
             generated: manifest.generated
         };
@@ -112,10 +112,11 @@ class StaticAPI {
     async getDesktop(name) {
         const manifest = await this.getManifest();
 
-        // Try to find by file name match
+        // Try to find by file name or mode match
         const desktop = manifest.desktops.find(d =>
             d.file === `${name}.html` ||
             d.file === name ||
+            d.mode === name ||
             this.getDesktopMode(d.file) === name
         );
 
@@ -123,13 +124,14 @@ class StaticAPI {
             throw new Error(`Desktop '${name}' not found`);
         }
 
+        const mode = desktop.mode || this.getDesktopMode(desktop.file);
         return {
             ...desktop,
             url: `${this.baseURL}${desktop.file}`,
-            modularUrl: `${this.baseURL}desktop.html?mode=${this.getDesktopMode(desktop.file)}`,
+            modularUrl: `${this.baseURL}desktop.html?mode=${mode}`,
             modular: {
                 available: true, // Assume available
-                mode: this.getDesktopMode(desktop.file)
+                mode: mode
             }
         };
     }

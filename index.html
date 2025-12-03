@@ -920,10 +920,10 @@
             // Filter by tab
             if (currentTab === 'favorites') {
                 const favorites = api.getFavorites();
-                desktops = desktops.filter(d => favorites.includes(getDesktopId(d.file)));
+                desktops = desktops.filter(d => favorites.includes(getDesktopId(d)));
             } else if (currentTab === 'recent') {
                 const recent = api.getRecent().map(r => r.name);
-                desktops = desktops.filter(d => recent.includes(getDesktopId(d.file)));
+                desktops = desktops.filter(d => recent.includes(getDesktopId(d)));
             }
 
             // Filter by theme
@@ -953,8 +953,8 @@
             } else if (sortValue === 'recent') {
                 const recent = api.getRecent();
                 desktops.sort((a, b) => {
-                    const aIndex = recent.findIndex(r => r.name === getDesktopId(a.file));
-                    const bIndex = recent.findIndex(r => r.name === getDesktopId(b.file));
+                    const aIndex = recent.findIndex(r => r.name === getDesktopId(a));
+                    const bIndex = recent.findIndex(r => r.name === getDesktopId(b));
                     if (aIndex === -1) return 1;
                     if (bIndex === -1) return -1;
                     return aIndex - bIndex;
@@ -979,7 +979,7 @@
             const recent = api.getRecent();
 
             desktops.forEach(desktop => {
-                const desktopId = getDesktopId(desktop.file);
+                const desktopId = getDesktopId(desktop);
                 const isFavorite = favorites.includes(desktopId);
                 const recentItem = recent.find(r => r.name === desktopId);
 
@@ -1057,12 +1057,18 @@
             });
         }
 
-        // Helper: Get desktop ID from filename
-        function getDesktopId(filename) {
+        // Helper: Get desktop ID - use mode if available, otherwise derive from filename
+        function getDesktopId(desktop) {
+            // If desktop is an object with mode, use that
+            if (desktop && typeof desktop === 'object' && desktop.mode) {
+                return desktop.mode;
+            }
+            // Otherwise, derive from filename string (legacy support)
+            const filename = typeof desktop === 'string' ? desktop : desktop.file;
             return filename
                 .replace('.html', '')
                 .replace('_desktop', '')
-                .replace('_', '');
+                .replace(/_/g, '');
         }
 
         // Format relative time
